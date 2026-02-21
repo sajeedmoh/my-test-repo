@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --sidebar:   #13161f;
+      --surface:   #1a1d27;
+      --border:    rgba(255,255,255,0.08);
+      --text:      #f0f0f0;
+      --muted:     rgba(240,240,240,0.45);
+      --accent:    #4f8ef7;
+      --sidebar-w: 260px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ══════════════════════════════════════
+       LEFT SIDEBAR
+    ══════════════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 20;
+    }
+
+    /* Brand */
+    .sidebar-brand {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .brand-name {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    /* User block */
+    .sidebar-user {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4f8ef7, #a855f7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .user-meta { overflow: hidden; }
+
+    .user-meta .name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-meta .role {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    /* Nav label */
+    .nav-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 16px 20px 8px;
+    }
+
+    /* Project tiles */
+    .project-tiles {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .project-tile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      text-decoration: none;
+      color: var(--text);
+      transition: background 0.18s, border-color 0.18s;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .project-tile:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: var(--border);
+    }
+
+    /* Left accent bar on hover */
+    .project-tile::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 20%; bottom: 20%;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: var(--tile-accent, var(--accent));
+      opacity: 0;
+      transition: opacity 0.18s;
+    }
+
+    .project-tile:hover::before { opacity: 1; }
+
+    .tile-icon {
+      width: 38px; height: 38px;
+      border-radius: 9px;
+      background: var(--tile-icon-bg, rgba(79,142,247,0.12));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .tile-text { overflow: hidden; }
+
+    .tile-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tile-desc {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tile-arrow {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: var(--muted);
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity 0.18s;
+    }
+
+    .project-tile:hover .tile-arrow { opacity: 1; }
+
+    /* Per-tile colours */
+    #tile-calc   { --tile-accent: #f97316; --tile-icon-bg: rgba(249,115,22,0.12); }
+    #tile-todo   { --tile-accent: #22c55e; --tile-icon-bg: rgba(34,197,94,0.12); }
+    #tile-prayer { --tile-accent: #c9a84c; --tile-icon-bg: rgba(201,168,76,0.12); }
+    #tile-utils  { --tile-accent: #a78bfa; --tile-icon-bg: rgba(167,139,250,0.12); }
+
+    /* Sign out */
+    .sidebar-footer {
+      padding: 14px 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-logout {
+      width: 100%;
+      padding: 9px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.83rem;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-logout:hover {
+      color: #ff6b6b;
+      border-color: rgba(255,107,107,0.35);
+      background: rgba(255,107,107,0.06);
+    }
+
+    /* ══════════════════════════════════════
+       MAIN CONTENT
+    ══════════════════════════════════════ */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Topbar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(15,17,23,0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 56px;
+      gap: 16px;
+    }
+
+    .topbar-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .clock-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    /* Content area */
+    .content {
+      padding: 44px 40px 80px;
+      flex: 1;
+    }
+
+    .greeting {
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+
+    .greeting .accent { color: var(--accent); }
+
+    .sub-greeting {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-bottom: 40px;
+    }
+
+    /* Stats row */
+    .stats-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      min-width: 140px;
+    }
+
+    .stat-card .stat-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-card .stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    /* Hint box */
+    .hint-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .page-footer {
+      font-size: 0.72rem;
+      color: rgba(240,240,240,0.15);
+      padding: 0 40px 28px;
+    }
+
+    /* ══════════════════════════════════════
+       RESPONSIVE — collapse sidebar on small screens
+    ══════════════════════════════════════ */
+    @media (max-width: 680px) {
+      :root { --sidebar-w: 0px; }
+
+      .sidebar {
+        display: none;
+      }
+
+      .main { margin-left: 0; }
+
+      .content { padding: 28px 20px 60px; }
+
+      .topbar { padding: 0 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════ LEFT SIDEBAR ══════════ -->
+<aside class="sidebar">
+
+  <div class="sidebar-brand">
+    <span class="brand-dot"></span>
+    <span class="brand-name">My Projects</span>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="avatar" id="avatarInitials">?</div>
+    <div class="user-meta">
+      <div class="name" id="sidebarName">User</div>
+      <div class="role">Developer</div>
+    </div>
+  </div>
+
+  <div class="nav-label">Projects</div>
+
+  <nav class="project-tiles">
+
+    <a href="calculator.html" id="tile-calc" class="project-tile">
+      <div class="tile-icon">&#128290;</div>
+      <div class="tile-text">
+        <div class="tile-title">Calculator</div>
+        <div class="tile-desc">Web arithmetic calculator</div>
+      </div>
+      <span class="tile-arrow">&#8599;</span>
+    </a>
+
+    <a href="todo-list.html" id="tile-todo" class="project-tile">
+      <div class="tile-icon">&#9989;</div>
+      <div class="tile-text">
+        <div class="tile-title">Todo List</div>
+        <div class="tile-desc">Task management app</div>
+      </div>
+      <span class="tile-arrow">&#8599;</span>
+    </a>
+
+    <a href="prayer-times.html" id="tile-prayer" class="project-tile">
+      <div class="tile-icon">&#128332;</div>
+      <div class="tile-text">
+        <div class="tile-title">Prayer Times</div>
+        <div class="tile-desc">Islamic prayer &amp; Ramadan</div>
+      </div>
+      <span class="tile-arrow">&#8599;</span>
+    </a>
+
+    <a href="utilities.html" id="tile-utils" class="project-tile">
+      <div class="tile-icon">&#128176;</div>
+      <div class="tile-text">
+        <div class="tile-title">Utilities</div>
+        <div class="tile-desc">Rates · Gold · Silver · FX</div>
+      </div>
+      <span class="tile-arrow">&#8599;</span>
+    </a>
+
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="logout()">&#128275; Sign out</button>
+  </div>
+
+</aside>
+
+<!-- ══════════ MAIN CONTENT ══════════ -->
+<div class="main">
+
+  <header class="topbar">
+    <span class="topbar-title">Dashboard</span>
+    <div class="clock-pill">
+      &#128336; <span id="currentTime">—</span> &nbsp;·&nbsp; &#128197; <span id="currentDate">—</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <div class="greeting">
+      Good <span id="timeOfDay">day</span>,<br>
+      <span class="accent" id="userName">there</span> &#128075;
+    </div>
+    <div class="sub-greeting">Select a project from the sidebar or open one below.</div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Projects</div>
+        <div class="stat-value">4</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Language</div>
+        <div class="stat-value" style="font-size:1rem; padding-top:4px;">HTML · Python</div>
+      </div>
+    </div>
+
+    <div class="hint-box">
+      &#128072; Select a project from the sidebar on the left to open it.
+    </div>
+
+  </div>
+
+  <div class="page-footer">My Projects Dashboard &bull; &copy; 2026</div>
+</div>
+
+<script>
+  /* ── Auth guard ─────────────────────────────── */
+  const session = JSON.parse(localStorage.getItem('auth_session') || 'null');
+  if (!session) window.location.replace('login.html');
+
+  /* ── Personalise ────────────────────────────── */
+  function getTimeOfDay() {
+    const h = new Date().getHours();
+    if (h < 12) return 'morning';
+    if (h < 17) return 'afternoon';
+    if (h < 21) return 'evening';
+    return 'night';
+  }
+
+  function getInitials(f, l) {
+    return ((f?.[0] || '') + (l?.[0] || '')).toUpperCase() || '?';
+  }
+
+  if (session) {
+    const first   = session.firstName || '';
+    const last    = session.lastName  || '';
+    const display = first || session.email?.split('@')[0] || 'there';
+
+    document.getElementById('userName').textContent      = display;
+    document.getElementById('sidebarName').textContent   = display;
+    document.getElementById('avatarInitials').textContent = getInitials(first, last);
+    document.getElementById('timeOfDay').textContent     = getTimeOfDay();
+  }
+
+  /* ── Live clock ─────────────────────────────── */
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('currentTime').textContent =
+      now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('currentDate').textContent =
+      now.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  /* ── Logout ─────────────────────────────────── */
+  function logout() {
+    localStorage.removeItem('auth_session');
+    window.location.href = 'login.html';
+  }
+</script>
+</body>
+</html>

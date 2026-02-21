@@ -222,9 +222,48 @@
     }
 
     .clear-btn:hover { text-decoration: underline; }
+
+    /* ── Back to dashboard bar ─────────────────── */
+    .back-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(15,17,23,0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      height: 44px;
+    }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.82rem;
+      color: rgba(240,240,240,0.55);
+      text-decoration: none;
+      transition: color 0.18s;
+    }
+
+    .back-link:hover { color: #f0f0f0; }
+
+    .back-link .chevron {
+      font-size: 0.85rem;
+      line-height: 1;
+    }
+
+    body { padding-top: 44px; }
   </style>
 </head>
 <body>
+  <nav class="back-bar">
+    <a href="dashboard.html" class="back-link">
+      <span class="chevron">&#8592;</span> Back to Dashboard
+    </a>
+  </nav>
+
   <div class="app">
     <div class="app-header">
       <h1>To-Do List</h1>

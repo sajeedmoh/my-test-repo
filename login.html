@@ -221,7 +221,7 @@
   <script>
     // Redirect if already logged in
     if (localStorage.getItem('auth_session')) {
-      window.location.replace('todo-list.html');
+      window.location.replace('dashboard.html');
     }
 
     const form      = document.getElementById('loginForm');
@@ -305,7 +305,7 @@
           firstName: user.firstName,
           lastName: user.lastName,
         }));
-        window.location.href = 'todo-list.html';
+        window.location.href = 'dashboard.html';
       }, 800);
     });
   </script>

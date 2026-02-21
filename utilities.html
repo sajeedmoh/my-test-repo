@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Utilities</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0f1117;
+      --surface: #1a1d27;
+      --border:  rgba(255,255,255,0.08);
+      --text:    #f0f0f0;
+      --muted:   rgba(240,240,240,0.45);
+      --accent:  #4f8ef7;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 76px 24px 60px;
+    }
+
+    /* ── Back bar ─────────────────────────────── */
+    .back-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(15,17,23,0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      height: 44px;
+    }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.18s;
+    }
+
+    .back-link:hover { color: var(--accent); }
+
+    /* ── Page header ──────────────────────────── */
+    .page-header {
+      max-width: 860px;
+      margin: 0 auto 28px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-left {}
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: 4px;
+    }
+
+    .page-subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .last-updated {
+      font-size: 0.72rem;
+      color: rgba(240,240,240,0.3);
+      margin-top: 4px;
+    }
+
+    .refresh-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      background: rgba(79,142,247,0.1);
+      border: 1px solid rgba(79,142,247,0.25);
+      border-radius: 8px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.18s;
+      flex-shrink: 0;
+    }
+
+    .refresh-btn:hover { background: rgba(79,142,247,0.2); }
+    .refresh-btn.spinning { pointer-events: none; opacity: 0.6; }
+
+    /* ── Grid ─────────────────────────────────── */
+    .grid {
+      max-width: 860px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 620px) {
+      .grid { grid-template-columns: 1fr; }
+      body  { padding: 68px 16px 48px; }
+      .page-header { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ── Card ─────────────────────────────────── */
+    .util-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px 22px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .card-desc {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── Rate display ─────────────────────────── */
+    .rate-block {}
+
+    .rate-value {
+      font-size: 2rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      min-height: 2rem;
+    }
+
+    .rate-unit {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .divider-line {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    .sub-rate {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sub-rate-value {
+      font-size: 1.35rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+      min-height: 1.35rem;
+    }
+
+    .sub-rate-unit {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    /* ── Converter ────────────────────────────── */
+    .converter {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .converter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .convert-input {
+      flex: 1;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+      min-width: 0;
+    }
+
+    .convert-input:focus { border-color: rgba(255,255,255,0.2); }
+    .convert-input::placeholder { color: rgba(240,240,240,0.2); }
+
+    .convert-badge {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 5px;
+      background: rgba(255,255,255,0.06);
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .convert-result {
+      font-size: 0.88rem;
+      color: var(--muted);
+      min-height: 1.4em;
+      padding-left: 2px;
+    }
+
+    .convert-result .rval {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ── Skeleton ─────────────────────────────── */
+    @keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:.6} }
+
+    .skel {
+      display: inline-block;
+      background: rgba(255,255,255,0.08);
+      border-radius: 6px;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    .skel-lg { width: 130px; height: 2rem; }
+    .skel-md { width: 90px; height: 1.35rem; }
+
+    /* ── Note ─────────────────────────────────── */
+    .note {
+      font-size: 0.68rem;
+      color: rgba(240,240,240,0.22);
+      line-height: 1.55;
+    }
+
+    /* ── Per-card accent colours ──────────────── */
+    .card-usd    .card-icon { background: rgba(79,142,247,0.12); }
+    .card-aed    .card-icon { background: rgba(34,197,94,0.12); }
+    .card-gold   .card-icon { background: rgba(234,179,8,0.12); }
+    .card-silver .card-icon { background: rgba(148,163,184,0.12); }
+
+    .card-usd    .rate-value  { color: #4f8ef7; }
+    .card-aed    .rate-value  { color: #22c55e; }
+    .card-gold   .rate-value  { color: #eab308; }
+    .card-silver .rate-value  { color: #94a3b8; }
+
+    .card-gold   .sub-rate-value { color: #ca8a04; }
+
+    /* ── Error banner ─────────────────────────── */
+    .error-bar {
+      max-width: 860px;
+      margin: 0 auto 16px;
+      padding: 10px 16px;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: #f87171;
+      display: none;
+    }
+
+    .error-bar.show { display: block; }
+  </style>
+</head>
+<body>
+
+<nav class="back-bar">
+  <a href="dashboard.html" class="back-link">&#8592; Back to Dashboard</a>
+</nav>
+
+<div class="page-header">
+  <div class="header-left">
+    <h1 class="page-title">Utilities</h1>
+    <div class="page-subtitle">Live exchange rates &amp; commodity prices</div>
+    <div class="last-updated" id="lastUpdated">Fetching latest rates…</div>
+  </div>
+  <button class="refresh-btn" id="refreshBtn" onclick="fetchAll()">&#8635; Refresh</button>
+</div>
+
+<div class="error-bar" id="errorBar"></div>
+
+<div class="grid">
+
+  <!-- USD → INR -->
+  <div class="util-card card-usd">
+    <div class="card-header">
+      <div class="card-icon">&#x1F4B5;</div>
+      <div>
+        <div class="card-title">US Dollar → Rupee</div>
+        <div class="card-desc">USD / INR live rate</div>
+      </div>
+    </div>
+
+    <div class="rate-block">
+      <div class="rate-value" id="usdRate"><span class="skel skel-lg"></span></div>
+      <div class="rate-unit" id="usdUnit">1 USD = — INR</div>
+    </div>
+
+    <hr class="divider-line" />
+
+    <div class="converter">
+      <div class="converter-row">
+        <input class="convert-input" type="number" id="usdInput"
+               placeholder="Amount in USD" min="0" oninput="convertUSD()" />
+        <span class="convert-badge">USD</span>
+      </div>
+      <div class="convert-result" id="usdResult"></div>
+    </div>
+  </div>
+
+  <!-- AED → INR -->
+  <div class="util-card card-aed">
+    <div class="card-header">
+      <div class="card-icon">&#x1F1E6;&#x1F1EA;</div>
+      <div>
+        <div class="card-title">UAE Dirham → Rupee</div>
+        <div class="card-desc">AED / INR live rate</div>
+      </div>
+    </div>
+
+    <div class="rate-block">
+      <div class="rate-value" id="aedRate"><span class="skel skel-lg"></span></div>
+      <div class="rate-unit" id="aedUnit">1 AED = — INR</div>
+    </div>
+
+    <hr class="divider-line" />
+
+    <div class="converter">
+      <div class="converter-row">
+        <input class="convert-input" type="number" id="aedInput"
+               placeholder="Amount in AED" min="0" oninput="convertAED()" />
+        <span class="convert-badge">AED</span>
+      </div>
+      <div class="convert-result" id="aedResult"></div>
+    </div>
+  </div>
+
+  <!-- Gold -->
+  <div class="util-card card-gold">
+    <div class="card-header">
+      <div class="card-icon">&#x1F947;</div>
+      <div>
+        <div class="card-title">Gold Rate · Kerala</div>
+        <div class="card-desc">22K gold — today's indicative rate</div>
+      </div>
+    </div>
+
+    <div class="rate-block">
+      <div class="rate-value" id="goldGramRate"><span class="skel skel-lg"></span></div>
+      <div class="rate-unit">per gram (22K)</div>
+    </div>
+
+    <hr class="divider-line" />
+
+    <div class="sub-rate">
+      <div class="sub-rate-value" id="goldPavanRate"><span class="skel skel-md"></span></div>
+      <div class="sub-rate-unit">per Pavan · 8 grams (22K)</div>
+    </div>
+
+    <hr class="divider-line" />
+
+    <div class="converter">
+      <div class="converter-row">
+        <input class="convert-input" type="number" id="goldInput"
+               placeholder="Enter grams" min="0" step="0.01" oninput="convertGold()" />
+        <span class="convert-badge">g</span>
+      </div>
+      <div class="convert-result" id="goldResult"></div>
+    </div>
+
+    <div class="note">
+      * Pre-GST rate · matches goodreturns.in Kerala jeweller rate. Add 3% GST for final billing price.
+    </div>
+  </div>
+
+  <!-- Silver -->
+  <div class="util-card card-silver">
+    <div class="card-header">
+      <div class="card-icon">&#x1F948;</div>
+      <div>
+        <div class="card-title">Silver Rate · Kerala</div>
+        <div class="card-desc">999 fine silver — today's indicative rate</div>
+      </div>
+    </div>
+
+    <div class="rate-block">
+      <div class="rate-value" id="silverGramRate"><span class="skel skel-lg"></span></div>
+      <div class="rate-unit">per gram (999)</div>
+    </div>
+
+    <hr class="divider-line" />
+
+    <div class="converter">
+      <div class="converter-row">
+        <input class="convert-input" type="number" id="silverInput"
+               placeholder="Enter grams" min="0" step="0.01" oninput="convertSilver()" />
+        <span class="convert-badge">g</span>
+      </div>
+      <div class="convert-result" id="silverResult"></div>
+    </div>
+
+    <div class="note">
+      * Indicative — calculated from international spot price + 15% import duty + 3% GST.
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const TROY_OZ_TO_GRAM = 31.1035;
+  const PAVAN_GRAMS     = 8;
+  const TAX_FACTOR      = 1.15 * 1.03; // 15% import duty + 3% GST (silver)
+  const GOLD_IMPORT     = 1.076;        // India gold import duty post-Jul 2024: 6% BCD + 1% AIDC + 0.6% SWS
+
+  // @fawazahmed0/currency-api — CDN-hosted, CORS-enabled, no API key required.
+  // XAU = 1 troy oz gold, XAG = 1 troy oz silver (ISO 4217 commodity codes).
+  const API_PRIMARY  = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies';
+  const API_FALLBACK = 'https://latest.currency-api.pages.dev/v1/currencies';
+
+  let rates = { usd: null, aed: null, goldPerGram: null, silverPerGram: null };
+
+  /* ── Helpers ──────────────────────────────── */
+  function fmt(n, dec = 2) {
+    return n.toLocaleString('en-IN', {
+      minimumFractionDigits: dec,
+      maximumFractionDigits: dec,
+    });
+  }
+
+  function setEl(id, html) { document.getElementById(id).innerHTML = html; }
+
+  function showError(msg) {
+    const bar = document.getElementById('errorBar');
+    bar.textContent = msg;
+    bar.classList.add('show');
+  }
+
+  function hideError() {
+    document.getElementById('errorBar').classList.remove('show');
+  }
+
+  async function getJson(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+
+  /* ── Converters ───────────────────────────── */
+  function convertUSD() {
+    if (!rates.usd) return;
+    const amt = parseFloat(document.getElementById('usdInput').value);
+    const el  = document.getElementById('usdResult');
+    if (isNaN(amt) || document.getElementById('usdInput').value === '') { el.innerHTML = ''; return; }
+    el.innerHTML = `= <span class="rval">₹${fmt(amt * rates.usd)}</span>`;
+  }
+
+  function convertAED() {
+    if (!rates.aed) return;
+    const amt = parseFloat(document.getElementById('aedInput').value);
+    const el  = document.getElementById('aedResult');
+    if (isNaN(amt) || document.getElementById('aedInput').value === '') { el.innerHTML = ''; return; }
+    el.innerHTML = `= <span class="rval">₹${fmt(amt * rates.aed)}</span>`;
+  }
+
+  function convertGold() {
+    if (!rates.goldPerGram) return;
+    const grams = parseFloat(document.getElementById('goldInput').value);
+    const el    = document.getElementById('goldResult');
+    if (isNaN(grams) || document.getElementById('goldInput').value === '') { el.innerHTML = ''; return; }
+    el.innerHTML = `= <span class="rval">₹${fmt(grams * rates.goldPerGram)}</span>`;
+  }
+
+  function convertSilver() {
+    if (!rates.silverPerGram) return;
+    const grams = parseFloat(document.getElementById('silverInput').value);
+    const el    = document.getElementById('silverResult');
+    if (isNaN(grams) || document.getElementById('silverInput').value === '') { el.innerHTML = ''; return; }
+    el.innerHTML = `= <span class="rval">₹${fmt(grams * rates.silverPerGram)}</span>`;
+  }
+
+  /* ── Render rates into UI ─────────────────── */
+  function renderRates(usd, xau, xag) {
+    // Currency
+    rates.usd = usd.inr;
+    rates.aed = usd.inr / usd.aed;
+
+    setEl('usdRate', `₹${fmt(rates.usd)}`);
+    document.getElementById('usdUnit').textContent = `1 USD = ₹${fmt(rates.usd)}`;
+
+    setEl('aedRate', `₹${fmt(rates.aed)}`);
+    document.getElementById('aedUnit').textContent = `1 AED = ₹${fmt(rates.aed)}`;
+
+    // Gold — xau.inr = price of 1 troy oz gold in INR (international spot)
+    // Apply India import duty (7.6%) to match goodreturns.in Kerala pre-GST rate
+    const gold22kPerGram = (xau.inr / TROY_OZ_TO_GRAM) * (22 / 24) * GOLD_IMPORT;
+    const pavanRate      = gold22kPerGram * PAVAN_GRAMS;
+    rates.goldPerGram    = gold22kPerGram;
+
+    setEl('goldGramRate',  `₹${fmt(gold22kPerGram)}`);
+    setEl('goldPavanRate', `₹${fmt(pavanRate)}`);
+
+    // Silver — xag.inr = price of 1 troy oz silver in INR (international spot)
+    const silverPerGram  = (xag.inr / TROY_OZ_TO_GRAM) * TAX_FACTOR;
+    rates.silverPerGram  = silverPerGram;
+
+    setEl('silverGramRate', `₹${fmt(silverPerGram)}`);
+  }
+
+  /* ── Fetch with primary → fallback chain ──── */
+  async function fetchAll() {
+    hideError();
+    const btn = document.getElementById('refreshBtn');
+    btn.classList.add('spinning');
+    btn.innerHTML = '&#8635; Refreshing…';
+    document.getElementById('lastUpdated').textContent = 'Fetching latest rates…';
+
+    let success = false;
+
+    // Try CDN primary first
+    for (const base of [API_PRIMARY, API_FALLBACK]) {
+      try {
+        const [usdData, xauData, xagData] = await Promise.all([
+          getJson(`${base}/usd.json`),
+          getJson(`${base}/xau.json`),
+          getJson(`${base}/xag.json`),
+        ]);
+        renderRates(usdData.usd, xauData.xau, xagData.xag);
+        success = true;
+        break;
+      } catch (e) {
+        console.warn(`API attempt failed (${base}):`, e.message);
+      }
+    }
+
+    if (!success) {
+      showError('Could not fetch rates. Check your internet connection and try refreshing.');
+      setEl('usdRate',      '<span style="color:#f87171;font-size:1rem">Unavailable</span>');
+      setEl('aedRate',      '<span style="color:#f87171;font-size:1rem">Unavailable</span>');
+      setEl('goldGramRate', '<span style="color:#f87171;font-size:1rem">Unavailable</span>');
+      setEl('goldPavanRate','<span style="color:#f87171;font-size:1rem">Unavailable</span>');
+      setEl('silverGramRate','<span style="color:#f87171;font-size:1rem">Unavailable</span>');
+    }
+
+    const now = new Date();
+    document.getElementById('lastUpdated').textContent = success
+      ? `Last updated: ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ` +
+        `${now.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}`
+      : 'Last update failed — please refresh';
+
+    btn.classList.remove('spinning');
+    btn.innerHTML = '&#8635; Refresh';
+  }
+
+  fetchAll();
+</script>
+</body>
+</html>
