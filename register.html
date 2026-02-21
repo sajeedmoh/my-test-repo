@@ -389,7 +389,7 @@
     }
 
     // Submit
-    document.getElementById('regForm').addEventListener('submit', e => {
+    document.getElementById('regForm').addEventListener('submit', async e => {
       e.preventDefault();
       alertEl.className = 'alert';
 
@@ -413,32 +413,44 @@
 
       if (Object.values(errors).some(Boolean)) return;
 
-      // Check for duplicate email
-      const users = JSON.parse(localStorage.getItem('auth_users') || '[]');
-      if (users.find(u => u.email === em.value.trim())) {
-        setFieldError(em, 'emailError', 'An account with this email already exists.');
-        return;
-      }
-
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
       btn.textContent = 'Creating account…';
 
-      setTimeout(() => {
-        // Save new user
-        users.push({
-          email: em.value.trim(),
-          password: pwEl.value,
-          firstName: fn.value.trim(),
-          lastName: ln.value.trim(),
+      try {
+        const res  = await fetch('/api/auth/register', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({
+            firstName: fn.value.trim(),
+            lastName:  ln.value.trim(),
+            email:     em.value.trim(),
+            password:  pwEl.value,
+          }),
         });
-        localStorage.setItem('auth_users', JSON.stringify(users));
+        const data = await res.json();
 
-        alertEl.className = 'alert success';
+        if (!res.ok) {
+          if (res.status === 409) {
+            setFieldError(em, 'emailError', data.error);
+          } else {
+            alertEl.className   = 'alert error';
+            alertEl.textContent = data.error || 'Registration failed. Please try again.';
+          }
+          return;
+        }
+
+        alertEl.className   = 'alert success';
         alertEl.textContent = 'Account created! Redirecting to login…';
-
         setTimeout(() => { window.location.href = 'login.html'; }, 1000);
-      }, 800);
+
+      } catch {
+        alertEl.className   = 'alert error';
+        alertEl.textContent = 'Could not reach the server — make sure it is running on port 3000.';
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Create Account';
+      }
     });
   </script>
 </body>

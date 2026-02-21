@@ -267,7 +267,7 @@
       if (!err) pwEl.className = 'success';
     });
 
-    form.addEventListener('submit', e => {
+    form.addEventListener('submit', async e => {
       e.preventDefault();
       alertEl.className = 'alert';
 
@@ -285,28 +285,32 @@
       btn.disabled = true;
       btn.textContent = 'Signing in…';
 
-      // Look up user in localStorage
-      const users = JSON.parse(localStorage.getItem('auth_users') || '[]');
-      const user  = users.find(u => u.email === emailEl.value.trim() && u.password === pwEl.value);
+      try {
+        const res  = await fetch('/api/auth/login', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ email: emailEl.value.trim(), password: pwEl.value }),
+        });
+        const data = await res.json();
 
-      setTimeout(() => {
-        btn.disabled = false;
-        btn.textContent = 'Sign In';
-
-        if (!user) {
-          alertEl.className = 'alert error';
-          alertEl.textContent = 'Invalid email or password.';
+        if (!res.ok) {
+          alertEl.className   = 'alert error';
+          alertEl.textContent = data.error || 'Invalid email or password.';
           return;
         }
 
-        // Save session and redirect
-        localStorage.setItem('auth_session', JSON.stringify({
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-        }));
+        // Save session (same format as before so other pages still work)
+        localStorage.setItem('auth_session', JSON.stringify(data.user));
+        localStorage.setItem('auth_token',   data.token);
         window.location.href = 'dashboard.html';
-      }, 800);
+
+      } catch {
+        alertEl.className   = 'alert error';
+        alertEl.textContent = 'Could not reach the server — make sure it is running on port 3000.';
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Sign In';
+      }
     });
   </script>
 </body>
