@@ -27,22 +27,14 @@ const TABLE_NAME = process.env.DYNAMODB_TABLE || 'auth_users';
 const AWS_REGION = process.env.AWS_REGION    || 'us-east-1';
 
 if (!JWT_SECRET) {
-  console.error('ERROR: JWT_SECRET is not set in .env — please add it and restart.');
-  process.exit(1);
-}
-if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-  console.error('ERROR: AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY is not set in .env');
+  console.error('ERROR: JWT_SECRET is not set — please add it and restart.');
   process.exit(1);
 }
 
 // ── DynamoDB ──────────────────────────────────────────────────────────────────
-const dynamo = new DynamoDBClient({
-  region: AWS_REGION,
-  credentials: {
-    accessKeyId:     process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+// In Lambda: SDK auto-detects credentials from the execution role (no explicit creds needed)
+// Locally:   SDK picks up AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY from .env via dotenv
+const dynamo = new DynamoDBClient({ region: AWS_REGION });
 
 const db = DynamoDBDocumentClient.from(dynamo);
 
@@ -162,15 +154,38 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// ── Start ─────────────────────────────────────────────────────────────────────
-ensureTable()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`\n✓ Server running → http://localhost:${PORT}`);
-      console.log(`  Open http://localhost:${PORT}/login.html\n`);
+// ── Lambda handler ────────────────────────────────────────────────────────────
+let _serverlessHandler;
+let _tableReady = false;
+
+async function getLambdaHandler() {
+  if (!_tableReady) {
+    await ensureTable();
+    _tableReady = true;
+  }
+  if (!_serverlessHandler) {
+    const serverless = require('serverless-http');
+    _serverlessHandler = serverless(app);
+  }
+  return _serverlessHandler;
+}
+
+exports.handler = async (event, context) => {
+  const h = await getLambdaHandler();
+  return h(event, context);
+};
+
+// ── Local dev server ──────────────────────────────────────────────────────────
+if (require.main === module) {
+  ensureTable()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`\n✓ Server running → http://localhost:${PORT}`);
+        console.log(`  Open http://localhost:${PORT}/login.html\n`);
+      });
+    })
+    .catch(err => {
+      console.error('Failed to connect to DynamoDB:', err.message);
+      process.exit(1);
     });
-  })
-  .catch(err => {
-    console.error('Failed to connect to DynamoDB:', err.message);
-    process.exit(1);
-  });
+}
