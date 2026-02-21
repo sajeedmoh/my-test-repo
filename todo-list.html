@@ -40,20 +40,6 @@
       margin-bottom: 0;
     }
 
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .user-name {
-      font-size: 0.85rem;
-      color: #666;
-    }
-
-    .user-name strong {
-      color: #1a1a2e;
-    }
 
 
     .input-row {
@@ -251,9 +237,7 @@
   <div class="app">
     <div class="app-header">
       <h1>To-Do List</h1>
-      <div class="user-info">
-        <span class="user-name">Hi, <strong id="userDisplayName"></strong></span>
-      </div>
+
     </div>
 
     <div class="input-row">
@@ -282,8 +266,6 @@
       window.location.replace('login.html');
     }
 
-    // Show user name
-    document.getElementById('userDisplayName').textContent = session.firstName;
 
 
     // Scope tasks per user
