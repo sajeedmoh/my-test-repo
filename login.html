@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 420px;
+      padding: 36px 32px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .logo h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .logo p {
+      font-size: 0.88rem;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 11px 40px 11px 14px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+      color: #1a1a2e;
+      background: #fafafa;
+    }
+
+    input:focus { border-color: #4f8ef7; background: #fff; }
+    input.error { border-color: #ef4444; }
+    input.success { border-color: #22c55e; }
+
+    .toggle-pw {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #aaa;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 2px;
+    }
+
+    .toggle-pw:hover { color: #666; }
+
+    .field-error {
+      font-size: 0.78rem;
+      color: #ef4444;
+      margin-top: 5px;
+      min-height: 16px;
+    }
+
+    .forgot {
+      display: block;
+      text-align: right;
+      font-size: 0.8rem;
+      color: #4f8ef7;
+      text-decoration: none;
+      margin-top: -10px;
+      margin-bottom: 20px;
+    }
+
+    .forgot:hover { text-decoration: underline; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px;
+      background: #4f8ef7;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-primary:hover { background: #3a7ae0; }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-primary:disabled {
+      background: #a0bffa;
+      cursor: not-allowed;
+    }
+
+    .divider {
+      text-align: center;
+      color: #bbb;
+      font-size: 0.85rem;
+      margin: 20px 0;
+      position: relative;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 42%;
+      height: 1px;
+      background: #e8e8e8;
+    }
+
+    .divider::before { left: 0; }
+    .divider::after  { right: 0; }
+
+    .footer-text {
+      text-align: center;
+      font-size: 0.88rem;
+      color: #666;
+    }
+
+    .footer-text a {
+      color: #4f8ef7;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer-text a:hover { text-decoration: underline; }
+
+    .alert {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      margin-bottom: 18px;
+      display: none;
+    }
+
+    .alert.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; display: block; }
+    .alert.error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <h1>Welcome back</h1>
+      <p>Sign in to your account</p>
+    </div>
+
+    <div id="alert" class="alert"></div>
+
+    <form id="loginForm" novalidate>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <div class="input-wrap">
+          <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="field-error" id="emailError"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrap">
+          <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" />
+          <button type="button" class="toggle-pw" id="togglePw" aria-label="Toggle password visibility">👁</button>
+        </div>
+        <div class="field-error" id="passwordError"></div>
+      </div>
+
+      <a href="#" class="forgot">Forgot password?</a>
+
+      <button type="submit" class="btn-primary" id="submitBtn">Sign In</button>
+    </form>
+
+    <div class="divider">or</div>
+
+    <p class="footer-text">
+      Don't have an account? <a href="register.html">Create one</a>
+    </p>
+  </div>
+
+  <script>
+    // Redirect if already logged in
+    if (localStorage.getItem('auth_session')) {
+      window.location.replace('todo-list.html');
+    }
+
+    const form      = document.getElementById('loginForm');
+    const emailEl   = document.getElementById('email');
+    const pwEl      = document.getElementById('password');
+    const togglePw  = document.getElementById('togglePw');
+    const alertEl   = document.getElementById('alert');
+
+    // Toggle password visibility
+    togglePw.onclick = () => {
+      const show = pwEl.type === 'password';
+      pwEl.type  = show ? 'text' : 'password';
+      togglePw.textContent = show ? '🙈' : '👁';
+    };
+
+    function setError(input, msgEl, msg) {
+      input.className = msg ? 'error' : '';
+      msgEl.textContent = msg;
+    }
+
+    function validateEmail(val) {
+      if (!val) return 'Email is required.';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return 'Enter a valid email address.';
+      return '';
+    }
+
+    function validatePassword(val) {
+      if (!val) return 'Password is required.';
+      if (val.length < 6) return 'Password must be at least 6 characters.';
+      return '';
+    }
+
+    // Live validation on blur
+    emailEl.addEventListener('blur', () => {
+      const err = validateEmail(emailEl.value.trim());
+      setError(emailEl, document.getElementById('emailError'), err);
+      if (!err) emailEl.className = 'success';
+    });
+
+    pwEl.addEventListener('blur', () => {
+      const err = validatePassword(pwEl.value);
+      setError(pwEl, document.getElementById('passwordError'), err);
+      if (!err) pwEl.className = 'success';
+    });
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      alertEl.className = 'alert';
+
+      const emailErr = validateEmail(emailEl.value.trim());
+      const pwErr    = validatePassword(pwEl.value);
+
+      setError(emailEl, document.getElementById('emailError'), emailErr);
+      setError(pwEl, document.getElementById('passwordError'), pwErr);
+      if (!emailErr) emailEl.className = 'success';
+      if (!pwErr)    pwEl.className    = 'success';
+
+      if (emailErr || pwErr) return;
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      // Look up user in localStorage
+      const users = JSON.parse(localStorage.getItem('auth_users') || '[]');
+      const user  = users.find(u => u.email === emailEl.value.trim() && u.password === pwEl.value);
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+
+        if (!user) {
+          alertEl.className = 'alert error';
+          alertEl.textContent = 'Invalid email or password.';
+          return;
+        }
+
+        // Save session and redirect
+        localStorage.setItem('auth_session', JSON.stringify({
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        }));
+        window.location.href = 'todo-list.html';
+      }, 800);
+    });
+  </script>
+</body>
+</html>
