@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 460px;
+      padding: 36px 32px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .logo h1 { font-size: 1.6rem; font-weight: 700; color: #1a1a2e; }
+    .logo p   { font-size: 0.88rem; color: #888; margin-top: 4px; }
+
+    .form-row {
+      display: flex;
+      gap: 14px;
+    }
+
+    .form-row .form-group { flex: 1; }
+
+    .form-group { margin-bottom: 16px; }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    .input-wrap { position: relative; }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 11px 40px 11px 14px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+      color: #1a1a2e;
+      background: #fafafa;
+    }
+
+    input:focus  { border-color: #4f8ef7; background: #fff; }
+    input.error  { border-color: #ef4444; }
+    input.valid  { border-color: #22c55e; }
+
+    .toggle-pw {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #aaa;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 2px;
+    }
+
+    .toggle-pw:hover { color: #666; }
+
+    .field-error {
+      font-size: 0.78rem;
+      color: #ef4444;
+      margin-top: 5px;
+      min-height: 16px;
+    }
+
+    /* Password strength meter */
+    .strength-wrap { margin-top: 8px; }
+
+    .strength-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .strength-bar span {
+      flex: 1;
+      height: 4px;
+      border-radius: 4px;
+      background: #e8e8e8;
+      transition: background 0.3s;
+    }
+
+    .strength-label {
+      font-size: 0.75rem;
+      color: #888;
+      min-height: 14px;
+    }
+
+    .rules {
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 12px;
+    }
+
+    .rule {
+      font-size: 0.75rem;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.2s;
+    }
+
+    .rule.met  { color: #22c55e; }
+    .rule.fail { color: #ef4444; }
+
+    .rule-icon { font-size: 0.7rem; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px;
+      background: #4f8ef7;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 6px;
+    }
+
+    .btn-primary:hover   { background: #3a7ae0; }
+    .btn-primary:active  { transform: scale(0.98); }
+    .btn-primary:disabled { background: #a0bffa; cursor: not-allowed; }
+
+    .divider {
+      text-align: center;
+      color: #bbb;
+      font-size: 0.85rem;
+      margin: 20px 0;
+      position: relative;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 42%;
+      height: 1px;
+      background: #e8e8e8;
+    }
+
+    .divider::before { left: 0; }
+    .divider::after  { right: 0; }
+
+    .footer-text {
+      text-align: center;
+      font-size: 0.88rem;
+      color: #666;
+    }
+
+    .footer-text a {
+      color: #4f8ef7;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer-text a:hover { text-decoration: underline; }
+
+    .alert {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      margin-bottom: 18px;
+      display: none;
+    }
+
+    .alert.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; display: block; }
+    .alert.error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <h1>Create account</h1>
+      <p>Sign up to get started</p>
+    </div>
+
+    <div id="alert" class="alert"></div>
+
+    <form id="regForm" novalidate>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName">First Name</label>
+          <input type="text" id="firstName" placeholder="John" autocomplete="given-name" />
+          <div class="field-error" id="firstNameError"></div>
+        </div>
+        <div class="form-group">
+          <label for="lastName">Last Name</label>
+          <input type="text" id="lastName" placeholder="Doe" autocomplete="family-name" />
+          <div class="field-error" id="lastNameError"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+        <div class="field-error" id="emailError"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrap">
+          <input type="password" id="password" placeholder="Create a strong password" autocomplete="new-password" />
+          <button type="button" class="toggle-pw" id="togglePw1" aria-label="Toggle password">👁</button>
+        </div>
+        <div class="field-error" id="passwordError"></div>
+
+        <div class="strength-wrap">
+          <div class="strength-bar">
+            <span id="bar1"></span>
+            <span id="bar2"></span>
+            <span id="bar3"></span>
+            <span id="bar4"></span>
+          </div>
+          <div class="strength-label" id="strengthLabel"></div>
+        </div>
+
+        <div class="rules">
+          <div class="rule" id="ruleLen"><span class="rule-icon">○</span> At least 8 chars</div>
+          <div class="rule" id="ruleUpper"><span class="rule-icon">○</span> Uppercase letter</div>
+          <div class="rule" id="ruleLower"><span class="rule-icon">○</span> Lowercase letter</div>
+          <div class="rule" id="ruleNum"><span class="rule-icon">○</span> Number</div>
+          <div class="rule" id="ruleSpecial"><span class="rule-icon">○</span> Special character</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <div class="input-wrap">
+          <input type="password" id="confirmPassword" placeholder="Repeat your password" autocomplete="new-password" />
+          <button type="button" class="toggle-pw" id="togglePw2" aria-label="Toggle confirm password">👁</button>
+        </div>
+        <div class="field-error" id="confirmError"></div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submitBtn">Create Account</button>
+    </form>
+
+    <div class="divider">or</div>
+
+    <p class="footer-text">
+      Already have an account? <a href="login.html">Sign in</a>
+    </p>
+  </div>
+
+  <script>
+    const pwEl      = document.getElementById('password');
+    const confirmEl = document.getElementById('confirmPassword');
+    const alertEl   = document.getElementById('alert');
+
+    // Toggle visibility
+    function makeToggle(btnId, inputEl) {
+      document.getElementById(btnId).onclick = () => {
+        const show = inputEl.type === 'password';
+        inputEl.type = show ? 'text' : 'password';
+        document.getElementById(btnId).textContent = show ? '🙈' : '👁';
+      };
+    }
+    makeToggle('togglePw1', pwEl);
+    makeToggle('togglePw2', confirmEl);
+
+    // --- Validation helpers ---
+    function setFieldError(inputEl, errorId, msg) {
+      inputEl.className = msg ? 'error' : 'valid';
+      document.getElementById(errorId).textContent = msg;
+    }
+
+    function validateName(val, label) {
+      if (!val.trim()) return `${label} is required.`;
+      if (val.trim().length < 2) return `${label} must be at least 2 characters.`;
+      return '';
+    }
+
+    function validateEmail(val) {
+      if (!val.trim()) return 'Email is required.';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())) return 'Enter a valid email address.';
+      return '';
+    }
+
+    function validatePassword(val) {
+      if (!val) return 'Password is required.';
+      if (val.length < 8) return 'Password must be at least 8 characters.';
+      return '';
+    }
+
+    function validateConfirm(val, pw) {
+      if (!val) return 'Please confirm your password.';
+      if (val !== pw) return 'Passwords do not match.';
+      return '';
+    }
+
+    // --- Password strength ---
+    const rules = {
+      ruleLen:     v => v.length >= 8,
+      ruleUpper:   v => /[A-Z]/.test(v),
+      ruleLower:   v => /[a-z]/.test(v),
+      ruleNum:     v => /[0-9]/.test(v),
+      ruleSpecial: v => /[^A-Za-z0-9]/.test(v),
+    };
+
+    const colors = ['', '#ef4444', '#f97316', '#eab308', '#22c55e'];
+    const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+
+    function updateStrength(val) {
+      const metCount = Object.values(rules).filter(fn => fn(val)).length;
+      const score = val.length === 0 ? 0 : Math.max(1, Math.round(metCount * 4 / 5));
+
+      const bars = ['bar1','bar2','bar3','bar4'];
+      bars.forEach((id, i) => {
+        document.getElementById(id).style.background = i < score ? colors[score] : '#e8e8e8';
+      });
+
+      const label = document.getElementById('strengthLabel');
+      label.textContent = val.length ? labels[score] : '';
+      label.style.color = colors[score];
+
+      Object.entries(rules).forEach(([id, fn]) => {
+        const el   = document.getElementById(id);
+        const icon = el.querySelector('.rule-icon');
+        const met  = val.length > 0 && fn(val);
+        const fail = val.length > 0 && !fn(val);
+        el.className = 'rule' + (met ? ' met' : fail ? ' fail' : '');
+        icon.textContent = met ? '✓' : fail ? '✕' : '○';
+      });
+    }
+
+    pwEl.addEventListener('input', () => {
+      updateStrength(pwEl.value);
+      if (confirmEl.value) {
+        const err = validateConfirm(confirmEl.value, pwEl.value);
+        setFieldError(confirmEl, 'confirmError', err);
+      }
+    });
+
+    // Blur validations
+    document.getElementById('firstName').addEventListener('blur', e => {
+      setFieldError(e.target, 'firstNameError', validateName(e.target.value, 'First name'));
+    });
+    document.getElementById('lastName').addEventListener('blur', e => {
+      setFieldError(e.target, 'lastNameError', validateName(e.target.value, 'Last name'));
+    });
+    document.getElementById('email').addEventListener('blur', e => {
+      setFieldError(e.target, 'emailError', validateEmail(e.target.value));
+    });
+    pwEl.addEventListener('blur', () => {
+      setFieldError(pwEl, 'passwordError', validatePassword(pwEl.value));
+    });
+    confirmEl.addEventListener('blur', () => {
+      setFieldError(confirmEl, 'confirmError', validateConfirm(confirmEl.value, pwEl.value));
+    });
+
+    // Redirect if already logged in
+    if (localStorage.getItem('auth_session')) {
+      window.location.replace('todo-list.html');
+    }
+
+    // Submit
+    document.getElementById('regForm').addEventListener('submit', e => {
+      e.preventDefault();
+      alertEl.className = 'alert';
+
+      const fn = document.getElementById('firstName');
+      const ln = document.getElementById('lastName');
+      const em = document.getElementById('email');
+
+      const errors = {
+        firstNameError: validateName(fn.value, 'First name'),
+        lastNameError:  validateName(ln.value, 'Last name'),
+        emailError:     validateEmail(em.value),
+        passwordError:  validatePassword(pwEl.value),
+        confirmError:   validateConfirm(confirmEl.value, pwEl.value),
+      };
+
+      setFieldError(fn, 'firstNameError', errors.firstNameError);
+      setFieldError(ln, 'lastNameError',  errors.lastNameError);
+      setFieldError(em, 'emailError',     errors.emailError);
+      setFieldError(pwEl,      'passwordError', errors.passwordError);
+      setFieldError(confirmEl, 'confirmError',  errors.confirmError);
+
+      if (Object.values(errors).some(Boolean)) return;
+
+      // Check for duplicate email
+      const users = JSON.parse(localStorage.getItem('auth_users') || '[]');
+      if (users.find(u => u.email === em.value.trim())) {
+        setFieldError(em, 'emailError', 'An account with this email already exists.');
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating account…';
+
+      setTimeout(() => {
+        // Save new user
+        users.push({
+          email: em.value.trim(),
+          password: pwEl.value,
+          firstName: fn.value.trim(),
+          lastName: ln.value.trim(),
+        });
+        localStorage.setItem('auth_users', JSON.stringify(users));
+
+        alertEl.className = 'alert success';
+        alertEl.textContent = 'Account created! Redirecting to login…';
+
+        setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+      }, 800);
+    });
+  </script>
+</body>
+</html>
