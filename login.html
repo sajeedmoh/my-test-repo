@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login</title>
+  <script src="config.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -286,7 +287,7 @@
       btn.textContent = 'Signing in…';
 
       try {
-        const res  = await fetch('/api/auth/login', {
+        const res  = await fetch((window.API_BASE || '') + '/api/auth/login', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ email: emailEl.value.trim(), password: pwEl.value }),

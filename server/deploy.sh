@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy the auth server to AWS Lambda with a Function URL
+# Deploy the auth server to AWS Lambda + API Gateway HTTP API
 set -euo pipefail
 
 # ── Load .env ─────────────────────────────────────────────────────────────────
@@ -11,8 +11,10 @@ export $(grep -v '^#' .env | grep -v '^$' | xargs)
 
 # ── Config ────────────────────────────────────────────────────────────────────
 FUNCTION_NAME="my-test-repo-auth"
+API_NAME="my-test-repo-api"
 ROLE_NAME="my-test-repo-lambda-role"
 REGION="${AWS_REGION:-ap-south-1}"
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 RUNTIME="nodejs20.x"
 HANDLER="server.handler"
 TIMEOUT=30
@@ -20,7 +22,7 @@ MEMORY=256
 ZIP_FILE="function.zip"
 
 echo ""
-echo "=== Deploying $FUNCTION_NAME to Lambda ($REGION) ==="
+echo "=== Deploying $FUNCTION_NAME to Lambda + API Gateway ($REGION) ==="
 echo ""
 
 # ── Step 1: IAM role ──────────────────────────────────────────────────────────
@@ -52,9 +54,23 @@ else
       --role-name "$ROLE_NAME" \
       --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
-    aws iam attach-role-policy \
+    TABLE_ARN="arn:aws:dynamodb:${REGION}:${ACCOUNT_ID}:table/${DYNAMODB_TABLE}"
+    aws iam put-role-policy \
       --role-name "$ROLE_NAME" \
-      --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      --policy-name "DynamoDB-${DYNAMODB_TABLE}-only" \
+      --policy-document "{
+        \"Version\": \"2012-10-17\",
+        \"Statement\": [{
+          \"Effect\": \"Allow\",
+          \"Action\": [
+            \"dynamodb:DescribeTable\",
+            \"dynamodb:CreateTable\",
+            \"dynamodb:GetItem\",
+            \"dynamodb:PutItem\"
+          ],
+          \"Resource\": \"${TABLE_ARN}\"
+        }]
+      }"
 
     echo "     Waiting 10s for role to propagate..."
     sleep 10
@@ -121,50 +137,78 @@ else
     --output text > /dev/null
 fi
 echo "     Function deployed."
+rm -f "$ZIP_FILE"
 
-# ── Step 4: Function URL with CORS ────────────────────────────────────────────
-echo "4/5  Configuring Function URL..."
-FUNC_URL=$(aws lambda get-function-url-config \
-  --function-name "$FUNCTION_NAME" \
+# ── Step 4: API Gateway HTTP API ──────────────────────────────────────────────
+echo "4/5  Configuring API Gateway..."
+FUNC_ARN="arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:${FUNCTION_NAME}"
+
+# Check if API already exists
+API_ID=$(aws apigatewayv2 get-apis \
   --region "$REGION" \
-  --query 'FunctionUrl' --output text 2>/dev/null || true)
+  --query "Items[?Name=='$API_NAME'].ApiId" \
+  --output text 2>/dev/null || true)
 
-if [ -z "$FUNC_URL" ]; then
-  # Allow public invocation
+if [ -z "$API_ID" ]; then
+  echo "     Creating HTTP API..."
+  API_ID=$(aws apigatewayv2 create-api \
+    --name "$API_NAME" \
+    --protocol-type HTTP \
+    --cors-configuration 'AllowOrigins=["*"],AllowMethods=["POST"],AllowHeaders=["content-type"]' \
+    --region "$REGION" \
+    --query 'ApiId' --output text)
+
+  echo "     Creating Lambda integration..."
+  INTEG_ID=$(aws apigatewayv2 create-integration \
+    --api-id "$API_ID" \
+    --integration-type AWS_PROXY \
+    --integration-uri "$FUNC_ARN" \
+    --payload-format-version "2.0" \
+    --region "$REGION" \
+    --query 'IntegrationId' --output text)
+
+  echo "     Creating routes..."
+  aws apigatewayv2 create-route \
+    --api-id "$API_ID" \
+    --route-key "POST /api/auth/register" \
+    --target "integrations/$INTEG_ID" \
+    --region "$REGION" --output text > /dev/null
+  aws apigatewayv2 create-route \
+    --api-id "$API_ID" \
+    --route-key "POST /api/auth/login" \
+    --target "integrations/$INTEG_ID" \
+    --region "$REGION" --output text > /dev/null
+
+  echo "     Deploying stage..."
+  aws apigatewayv2 create-stage \
+    --api-id "$API_ID" \
+    --stage-name '$default' \
+    --auto-deploy \
+    --region "$REGION" --output text > /dev/null
+
+  echo "     Granting API Gateway permission to invoke Lambda..."
   aws lambda add-permission \
     --function-name "$FUNCTION_NAME" \
-    --statement-id FunctionURLAllowPublicAccess \
-    --action lambda:InvokeFunctionUrl \
-    --principal "*" \
-    --function-url-auth-type NONE \
-    --region "$REGION" \
-    --output text > /dev/null
-
-  FUNC_URL=$(aws lambda create-function-url-config \
-    --function-name "$FUNCTION_NAME" \
-    --auth-type NONE \
-    --cors '{
-      "AllowOrigins":["*"],
-      "AllowMethods":["POST"],
-      "AllowHeaders":["Content-Type"]
-    }' \
-    --region "$REGION" \
-    --query 'FunctionUrl' --output text)
+    --statement-id apigw-invoke \
+    --action lambda:InvokeFunction \
+    --principal apigateway.amazonaws.com \
+    --source-arn "arn:aws:execute-api:${REGION}:${ACCOUNT_ID}:${API_ID}/*" \
+    --region "$REGION" --output text > /dev/null
+else
+  echo "     API already exists (ID: $API_ID) — skipping creation."
 fi
 
-# Strip trailing slash
-FUNC_URL="${FUNC_URL%/}"
-echo "     Function URL: $FUNC_URL"
+API_URL="https://${API_ID}.execute-api.${REGION}.amazonaws.com"
+echo "     API URL: $API_URL"
 
-# ── Step 5: Update config.js with Lambda URL ──────────────────────────────────
+# ── Step 5: Update config.js and upload to S3 ────────────────────────────────
 echo "5/5  Updating ../config.js and uploading to S3..."
 CONFIG_FILE="../config.js"
 cat > "$CONFIG_FILE" <<EOF
 // Auto-generated by deploy.sh — do not edit manually
-window.API_BASE = '$FUNC_URL';
+window.API_BASE = '$API_URL';
 EOF
 
-# Upload config.js to S3
 aws s3 cp "$CONFIG_FILE" "s3://${S3_BUCKET:-sajeedmoh-my-projects}/config.js" \
   --content-type "application/javascript" \
   --region "$REGION"
@@ -173,11 +217,10 @@ aws s3 cp "$CONFIG_FILE" "s3://${S3_BUCKET:-sajeedmoh-my-projects}/config.js" \
 echo ""
 echo "=== Deploy complete ==="
 echo ""
-echo "  Lambda URL : $FUNC_URL"
-echo "  Login page : https://${S3_BUCKET:-sajeedmoh-my-projects}.s3-website.${REGION}.amazonaws.com/login.html"
+echo "  API Gateway URL : $API_URL"
+echo "  S3 login page   : http://${S3_BUCKET:-sajeedmoh-my-projects}.s3-website.${REGION}.amazonaws.com/login.html"
 echo ""
-echo "  API endpoints:"
-echo "    POST $FUNC_URL/api/auth/register"
-echo "    POST $FUNC_URL/api/auth/login"
+echo "  Endpoints:"
+echo "    POST $API_URL/api/auth/register"
+echo "    POST $API_URL/api/auth/login"
 echo ""
-rm -f "$ZIP_FILE"
