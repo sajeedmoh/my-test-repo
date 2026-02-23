@@ -466,8 +466,36 @@
     .back-link:hover { color: #c9a84c; }
 
     /* ── Responsive ─────────────────────────────────── */
-    @media (max-width: 480px) {
+    @media (max-width: 600px) {
       .prayers-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      .wrapper { padding: 68px 12px 80px; gap: 16px; }
+
+      .prayers-grid { grid-template-columns: 1fr; }
+
+      .controls-card { padding: 16px; }
+
+      /* Stack the two input rows vertically */
+      .controls-card .row { flex-direction: column; }
+
+      /* Make both buttons full-width and stacked */
+      .controls-card .row:last-of-type {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .btn, .btn-locate {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        align-self: stretch;
+      }
+
+      .next-prayer, .next-iqama { padding: 14px 16px; }
+
+      /* Prevent mosque SVG from causing horizontal overflow */
+      .mosque-wrap { overflow: hidden; }
     }
   </style>
 </head>

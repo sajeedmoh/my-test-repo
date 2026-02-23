@@ -115,6 +115,18 @@
       .page-header { flex-direction: column; align-items: flex-start; }
     }
 
+    @media (max-width: 480px) {
+      .rate-value { font-size: 1.5rem; }
+
+      /* Stack converter input and result vertically */
+      .converter-row { flex-wrap: wrap; gap: 6px; }
+      .convert-input { min-width: 0; width: 100%; }
+      .convert-badge { align-self: flex-start; }
+
+      /* Refresh button full width */
+      .btn-refresh { width: 100%; justify-content: center; }
+    }
+
     /* ── Card ─────────────────────────────────── */
     .util-card {
       background: var(--surface);

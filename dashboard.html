@@ -346,27 +346,67 @@
     }
 
     /* ══════════════════════════════════════
-       RESPONSIVE — collapse sidebar on small screens
+       HAMBURGER + BACKDROP (mobile only)
+    ══════════════════════════════════════ */
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 6px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .hamburger:hover { background: rgba(255,255,255,0.06); }
+
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 19;
+    }
+
+    .sidebar-backdrop.visible { display: block; }
+
+    /* ══════════════════════════════════════
+       RESPONSIVE — mobile sidebar overlay
     ══════════════════════════════════════ */
     @media (max-width: 680px) {
       :root { --sidebar-w: 0px; }
 
       .sidebar {
-        display: none;
+        transform: translateX(-260px);
+        transition: transform 0.25s ease;
       }
+
+      .sidebar.open { transform: translateX(0); }
+
+      .hamburger { display: flex; align-items: center; }
 
       .main { margin-left: 0; }
 
       .content { padding: 28px 20px 60px; }
 
-      .topbar { padding: 0 20px; }
+      .topbar { padding: 0 16px; gap: 8px; }
+
+      /* Hide date on small screens, keep time only */
+      .clock-date { display: none; }
+
+      .page-footer { padding: 0 20px 28px; }
     }
   </style>
 </head>
 <body>
 
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
 <!-- ══════════ LEFT SIDEBAR ══════════ -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
 
   <div class="sidebar-brand">
     <span class="brand-dot"></span>
@@ -430,10 +470,11 @@
 <div class="main">
 
   <header class="topbar">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Open menu">&#9776;</button>
     <span class="topbar-title">Dashboard</span>
     <div class="topbar-right">
       <div class="clock-pill">
-        &#128336; <span id="currentTime">—</span> &nbsp;·&nbsp; &#128197; <span id="currentDate">—</span>
+        &#128336; <span id="currentTime">—</span><span class="clock-date"> &nbsp;·&nbsp; &#128197; <span id="currentDate">—</span></span>
       </div>
       <button class="btn-topbar-logout" onclick="logout()">&#128275; Sign out</button>
     </div>
@@ -459,7 +500,7 @@
     </div>
 
     <div class="hint-box">
-      &#128072; Select a project from the sidebar on the left to open it.
+      &#128072; Select a project from the sidebar to open it.
     </div>
 
   </div>
@@ -506,6 +547,21 @@
   }
   updateClock();
   setInterval(updateClock, 1000);
+
+  /* ── Sidebar toggle (mobile) ────────────────── */
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    const isOpen = sidebar.classList.toggle('open');
+    backdrop.classList.toggle('visible', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  }
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarBackdrop').classList.remove('visible');
+    document.body.style.overflow = '';
+  }
 
   /* ── Logout ─────────────────────────────────── */
   function logout() {

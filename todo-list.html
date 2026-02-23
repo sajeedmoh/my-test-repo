@@ -225,6 +225,26 @@
     }
 
     body { padding-top: 44px; }
+
+    /* ── Responsive ────────────────────────────── */
+    @media (max-width: 480px) {
+      body { padding: 56px 12px 24px; }
+
+      .app { padding: 20px 16px; }
+
+      /* Stack input + button vertically */
+      .input-row { flex-direction: column; }
+      .input-row input { font-size: 1rem; }
+      .btn-add { width: 100%; }
+
+      /* Smaller filter buttons */
+      .filter-btn { padding: 5px 10px; font-size: 0.8rem; }
+
+      /* Always-visible task actions (no hover needed on touch) */
+      .icon-btn { padding: 6px 8px; font-size: 1.1rem; }
+
+      .task-item { padding: 12px 6px; }
+    }
   </style>
 </head>
 <body>
