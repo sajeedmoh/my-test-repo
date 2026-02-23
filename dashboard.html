@@ -201,33 +201,6 @@
     #tile-utils  { --tile-accent: #a78bfa; --tile-icon-bg: rgba(167,139,250,0.12); }
     #tile-kseb   { --tile-accent: #f59e0b; --tile-icon-bg: rgba(245,158,11,0.12); }
 
-    /* Sign out */
-    .sidebar-footer {
-      padding: 14px 12px;
-      border-top: 1px solid var(--border);
-    }
-
-    .btn-logout {
-      width: 100%;
-      padding: 9px 14px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: transparent;
-      color: var(--muted);
-      font-size: 0.83rem;
-      cursor: pointer;
-      transition: color 0.2s, border-color 0.2s, background 0.2s;
-      text-align: left;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-logout:hover {
-      color: #ff6b6b;
-      border-color: rgba(255,107,107,0.35);
-      background: rgba(255,107,107,0.06);
-    }
 
     /* ══════════════════════════════════════
        MAIN CONTENT
@@ -272,6 +245,33 @@
       border-radius: 99px;
       font-size: 0.82rem;
       color: var(--muted);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-topbar-logout {
+      padding: 6px 14px;
+      border-radius: 99px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .btn-topbar-logout:hover {
+      color: #ff6b6b;
+      border-color: rgba(255,107,107,0.35);
+      background: rgba(255,107,107,0.06);
     }
 
     /* Content area */
@@ -433,9 +433,6 @@
 
   </nav>
 
-  <div class="sidebar-footer">
-    <button class="btn-logout" onclick="logout()">&#128275; Sign out</button>
-  </div>
 
 </aside>
 
@@ -444,8 +441,11 @@
 
   <header class="topbar">
     <span class="topbar-title">Dashboard</span>
-    <div class="clock-pill">
-      &#128336; <span id="currentTime">—</span> &nbsp;·&nbsp; &#128197; <span id="currentDate">—</span>
+    <div class="topbar-right">
+      <div class="clock-pill">
+        &#128336; <span id="currentTime">—</span> &nbsp;·&nbsp; &#128197; <span id="currentDate">—</span>
+      </div>
+      <button class="btn-topbar-logout" onclick="logout()">&#128275; Sign out</button>
     </div>
   </header>
 
