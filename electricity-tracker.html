@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Electricity Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:            #0f1117;
+      --surface:       #1a1d27;
+      --surface2:      #1f2330;
+      --border:        rgba(255,255,255,0.08);
+      --text:          #f0f0f0;
+      --muted:         rgba(240,240,240,0.45);
+      --accent:        #f59e0b;
+      --accent-bg:     rgba(245,158,11,0.10);
+      --accent-border: rgba(245,158,11,0.25);
+      --green:         #22c55e;
+      --green-bg:      rgba(34,197,94,0.10);
+      --green-border:  rgba(34,197,94,0.25);
+      --red:           #ef4444;
+      --red-bg:        rgba(239,68,68,0.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 76px 24px 60px;
+    }
+
+    /* ── Back bar ─────────────────────────────── */
+    .back-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(15,17,23,0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      height: 44px;
+    }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.18s;
+    }
+
+    .back-link:hover { color: var(--accent); }
+
+    /* ── Layout ───────────────────────────────── */
+    .page-wrap {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* ── Page header ─────────────────────────── */
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: 4px;
+    }
+
+    .page-subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* ── Cycle summary bar ────────────────────── */
+    .cycle-bar {
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .cycle-bar-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 3px;
+    }
+
+    .cycle-bar-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .cycle-bar-unit {
+      font-size: 0.8rem;
+      color: rgba(245,158,11,0.6);
+      margin-left: 4px;
+    }
+
+    .cycle-bar-meta {
+      font-size: 0.75rem;
+      color: rgba(245,158,11,0.55);
+      margin-top: 3px;
+    }
+
+    .cycle-bar-right {
+      text-align: right;
+    }
+
+    .last-reading-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .last-reading-val {
+      font-size: 1.1rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+    }
+
+    /* ── Card ─────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    /* ── Form grid ────────────────────────────── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .form-grid .span2 { grid-column: span 2; }
+
+    .field label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .field input[type="text"],
+    .field input[type="date"],
+    .field input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+
+    .field input::-webkit-outer-spin-button,
+    .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .field input:focus { border-color: var(--accent); }
+    .field input::placeholder { color: rgba(240,240,240,0.2); }
+
+    /* Usage preview pill */
+    .usage-preview {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      min-height: 1.4em;
+    }
+
+    .usage-preview .uval {
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    /* ── Entry type selector ──────────────────── */
+    .type-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .type-option {
+      flex: 1;
+      position: relative;
+    }
+
+    .type-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0; height: 0;
+    }
+
+    .type-option label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 0.84rem;
+      color: var(--muted);
+      font-weight: 500;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+      user-select: none;
+    }
+
+    .type-option input[type="radio"]:checked + label {
+      border-color: var(--accent-border);
+      background: var(--accent-bg);
+      color: var(--accent);
+    }
+
+    .type-option.bill input[type="radio"]:checked + label {
+      border-color: var(--green-border);
+      background: var(--green-bg);
+      color: var(--green);
+    }
+
+    .type-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    /* ── Submit button ────────────────────────── */
+    .btn-add {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      border: none;
+      border-radius: 9px;
+      color: #000;
+      font-size: 0.92rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: filter 0.15s, transform 0.1s;
+      margin-top: 4px;
+    }
+
+    .btn-add:hover { filter: brightness(1.1); }
+    .btn-add:active { transform: scale(0.98); }
+
+    /* ── Entries section ──────────────────────── */
+    .entries-section { margin-top: 8px; }
+
+    /* Cycle group */
+    .cycle-group {
+      margin-bottom: 20px;
+    }
+
+    .cycle-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--green-bg);
+      border: 1px solid var(--green-border);
+      border-radius: 10px 10px 0 0;
+      font-size: 0.8rem;
+    }
+
+    .cycle-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .cycle-header-right {
+      font-size: 0.78rem;
+      color: rgba(34,197,94,0.6);
+    }
+
+    /* Current (open) cycle header */
+    .cycle-header.open {
+      background: var(--accent-bg);
+      border-color: var(--accent-border);
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+
+    .cycle-header.open .cycle-header-left { color: var(--accent); }
+    .cycle-header.open .cycle-header-right { color: rgba(245,158,11,0.6); }
+
+    /* Entry row */
+    .entry-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 13px 16px;
+      display: grid;
+      grid-template-columns: 90px 1fr 70px 70px auto;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.15s;
+    }
+
+    .entry-row:last-child { border-radius: 0 0 10px 10px; }
+    .entry-row:hover { background: var(--surface2); }
+
+    .entry-date {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .entry-comment {
+      font-size: 0.83rem;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .entry-comment.empty { color: var(--muted); font-style: italic; }
+
+    .entry-meter {
+      font-size: 0.82rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .entry-usage {
+      font-size: 0.88rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      color: var(--text);
+    }
+
+    .entry-usage.bill-reset {
+      color: var(--green);
+    }
+
+    .badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 7px;
+      border-radius: 5px;
+      white-space: nowrap;
+    }
+
+    .badge-entry {
+      background: rgba(245,158,11,0.12);
+      color: var(--accent);
+      border: 1px solid rgba(245,158,11,0.2);
+    }
+
+    .badge-bill {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid var(--green-border);
+    }
+
+    /* Entry actions */
+    .entry-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn-del {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: rgba(240,240,240,0.2);
+      font-size: 0.9rem;
+      padding: 4px;
+      border-radius: 5px;
+      transition: color 0.15s, background 0.15s;
+      line-height: 1;
+    }
+
+    .btn-del:hover {
+      color: var(--red);
+      background: var(--red-bg);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      border: 1px dashed rgba(255,255,255,0.1);
+      border-radius: 14px;
+    }
+
+    .empty-state .icon { font-size: 2rem; margin-bottom: 10px; }
+
+    /* Table column headers */
+    .entry-col-headers {
+      display: grid;
+      grid-template-columns: 90px 1fr 70px 70px auto;
+      gap: 12px;
+      padding: 6px 16px 8px;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(240,240,240,0.25);
+    }
+
+    .entry-col-headers span:nth-child(3),
+    .entry-col-headers span:nth-child(4) { text-align: right; }
+
+    /* ── Responsive ───────────────────────────── */
+    @media (max-width: 580px) {
+      body { padding: 68px 14px 48px; }
+
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .span2 { grid-column: span 1; }
+
+      .entry-row {
+        grid-template-columns: 80px 1fr 60px auto;
+      }
+
+      /* hide meter column on mobile */
+      .entry-meter { display: none; }
+      .entry-col-headers span:nth-child(3) { display: none; }
+
+      .cycle-bar { flex-direction: column; align-items: flex-start; }
+      .cycle-bar-right { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="back-bar">
+  <a href="dashboard.html" class="back-link">&#8592; Back to Dashboard</a>
+</nav>
+
+<div class="page-wrap">
+
+  <!-- ── Page header ── -->
+  <div class="page-header">
+    <h1 class="page-title">&#9889; Electricity Tracker</h1>
+    <div class="page-subtitle">Log meter readings and track usage across billing cycles</div>
+  </div>
+
+  <!-- ── Current cycle summary ── -->
+  <div class="cycle-bar" id="cycleBar">
+    <div>
+      <div class="cycle-bar-label">Current Cycle Usage</div>
+      <div>
+        <span class="cycle-bar-value" id="cycleUsageVal">0</span>
+        <span class="cycle-bar-unit">units</span>
+      </div>
+      <div class="cycle-bar-meta" id="cycleSince">No entries yet</div>
+    </div>
+    <div class="cycle-bar-right">
+      <div class="last-reading-label">Last meter reading</div>
+      <div class="last-reading-val" id="lastReadingVal">—</div>
+    </div>
+  </div>
+
+  <!-- ── Add entry form ── -->
+  <div class="card">
+    <div class="card-title">Add Entry</div>
+
+    <div class="form-grid">
+
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="entryDate" />
+      </div>
+
+      <div class="field">
+        <label>Meter Reading (kWh)</label>
+        <input type="number" id="meterReading" placeholder="e.g. 12450" min="0"
+               oninput="previewUsage()" />
+        <div class="usage-preview" id="usagePreview"></div>
+      </div>
+
+      <div class="field span2">
+        <label>Comments</label>
+        <input type="text" id="entryComment" placeholder="Optional note…" maxlength="120" />
+      </div>
+
+      <div class="field span2">
+        <label>Entry type</label>
+        <div class="type-group">
+          <div class="type-option">
+            <input type="radio" name="entryType" id="typeRegular" value="entry" checked />
+            <label for="typeRegular">
+              <span class="type-dot"></span>
+              Regular entry
+            </label>
+          </div>
+          <div class="type-option bill">
+            <input type="radio" name="entryType" id="typeBill" value="bill" />
+            <label for="typeBill">
+              <span class="type-dot"></span>
+              Bill received — reset cycle
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="btn-add" onclick="addEntry()">+ Add Entry</button>
+  </div>
+
+  <!-- ── Entries list ── -->
+  <div class="entries-section" id="entriesSection"></div>
+
+</div>
+
+<script src="config.js"></script>
+<script>
+  /* ── Auth & API ───────────────────────────────────────────────────── */
+  const token    = localStorage.getItem('auth_token');
+  const API_BASE = window.API_BASE || '';
+
+  function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+  }
+
+  /* ── In-memory cache ──────────────────────────────────────────────── */
+  let _entries = [];
+
+  /* ── API calls ────────────────────────────────────────────────────── */
+  async function fetchEntries() {
+    const res  = await fetch(API_BASE + '/api/electricity', { headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to load entries');
+    _entries = data.entries || [];
+  }
+
+  async function apiAddEntry(entry) {
+    const res  = await fetch(API_BASE + '/api/electricity', {
+      method: 'POST', headers: authHeaders(), body: JSON.stringify(entry),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to save entry');
+  }
+
+  async function apiDeleteEntry(id) {
+    const res  = await fetch(API_BASE + '/api/electricity/' + id, {
+      method: 'DELETE', headers: authHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to delete entry');
+  }
+
+  /* ── Button loading state ─────────────────────────────────────────── */
+  function setBusy(on) {
+    const btn = document.querySelector('.btn-add');
+    btn.disabled    = on;
+    btn.textContent = on ? 'Saving…' : '+ Add Entry';
+    document.getElementById('entriesSection').style.opacity = on ? '0.5' : '1';
+  }
+
+  /* ── Set today's date as default ──────────────────────────────────── */
+  document.getElementById('entryDate').value = new Date().toISOString().slice(0, 10);
+
+  /* ── Usage preview (uses in-memory cache) ─────────────────────────── */
+  function previewUsage() {
+    const val = parseFloat(document.getElementById('meterReading').value);
+    const el  = document.getElementById('usagePreview');
+
+    if (isNaN(val) || document.getElementById('meterReading').value === '') {
+      el.innerHTML = ''; return;
+    }
+    if (_entries.length === 0) {
+      el.innerHTML = '<span>First entry — usage will be 0</span>'; return;
+    }
+    const prev  = _entries[_entries.length - 1].meterReading;
+    const usage = val - prev;
+    if (usage < 0) {
+      el.innerHTML = '<span style="color:var(--red)">⚠ Reading is lower than previous (' + prev + ')</span>';
+    } else {
+      el.innerHTML = 'Usage since last entry: <span class="uval">+' + usage + ' units</span>';
+    }
+  }
+
+  /* ── Add entry ────────────────────────────────────────────────────── */
+  async function addEntry() {
+    const date    = document.getElementById('entryDate').value;
+    const reading = parseFloat(document.getElementById('meterReading').value);
+    const comment = document.getElementById('entryComment').value.trim();
+    const type    = document.querySelector('input[name="entryType"]:checked').value;
+
+    if (!date) { alert('Please select a date.'); return; }
+    if (isNaN(reading) || document.getElementById('meterReading').value === '') {
+      alert('Please enter a meter reading.'); return;
+    }
+
+    const prev  = _entries.length > 0 ? _entries[_entries.length - 1].meterReading : reading;
+    const usage = reading - prev;
+
+    if (usage < 0 && !confirm(`Meter reading (${reading}) is lower than previous (${prev}). Add anyway?`)) return;
+
+    setBusy(true);
+    try {
+      await apiAddEntry({
+        id:           Date.now(),
+        date,
+        meterReading: reading,
+        usage:        _entries.length === 0 ? 0 : usage,
+        comment,
+        type,
+      });
+      await fetchEntries();
+      document.getElementById('meterReading').value  = '';
+      document.getElementById('entryComment').value  = '';
+      document.getElementById('entryDate').value     = new Date().toISOString().slice(0, 10);
+      document.getElementById('typeRegular').checked = true;
+      document.getElementById('usagePreview').innerHTML = '';
+      renderAll();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /* ── Delete entry ─────────────────────────────────────────────────── */
+  async function deleteEntry(id) {
+    if (!confirm('Delete this entry?')) return;
+    setBusy(true);
+    try {
+      await apiDeleteEntry(id);
+      await fetchEntries();
+      renderAll();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /* ── Format date ──────────────────────────────────────────────────── */
+  function fmtDate(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' });
+  }
+
+  /* ── Render all ───────────────────────────────────────────────────── */
+  function renderAll() {
+    updateCycleBar(_entries);
+    renderEntries(_entries);
+    previewUsage();
+  }
+
+  /* ── Cycle bar ────────────────────────────────────────────────────── */
+  function updateCycleBar(entries) {
+    if (entries.length === 0) {
+      document.getElementById('cycleUsageVal').textContent  = '0';
+      document.getElementById('cycleSince').textContent     = 'No entries yet';
+      document.getElementById('lastReadingVal').textContent = '—';
+      return;
+    }
+    const last = entries[entries.length - 1];
+    document.getElementById('lastReadingVal').textContent = last.meterReading + ' kWh';
+
+    let cycleStartIdx = 0;
+    for (let i = entries.length - 1; i >= 0; i--) {
+      if (entries[i].type === 'bill') { cycleStartIdx = i + 1; break; }
+    }
+    const cycleEntries = entries.slice(cycleStartIdx);
+    const cycleUsage   = cycleEntries.reduce((sum, e) => sum + (e.usage > 0 ? e.usage : 0), 0);
+    document.getElementById('cycleUsageVal').textContent = cycleUsage;
+    document.getElementById('cycleSince').textContent = cycleEntries.length > 0
+      ? 'Since ' + fmtDate(cycleEntries[0].date) + ' · ' + cycleEntries.length + ' entr' + (cycleEntries.length === 1 ? 'y' : 'ies')
+      : 'New cycle started';
+  }
+
+  /* ── Render entries list ──────────────────────────────────────────── */
+  function renderEntries(entries) {
+    const section = document.getElementById('entriesSection');
+    if (entries.length === 0) {
+      section.innerHTML = `<div class="empty-state"><div class="icon">&#9889;</div>No entries yet. Add your first meter reading above.</div>`;
+      return;
+    }
+
+    const cycles = [];
+    let current  = [];
+    for (const entry of entries) {
+      current.push(entry);
+      if (entry.type === 'bill') { cycles.push([...current]); current = []; }
+    }
+    if (current.length > 0) cycles.push([...current]);
+    cycles.reverse();
+
+    let html = '';
+    cycles.forEach((cycle, ci) => {
+      const isOpen = ci === 0 && cycle[cycle.length - 1].type !== 'bill';
+      const total  = cycle.reduce((sum, e) => sum + (e.usage > 0 ? e.usage : 0), 0);
+      const from   = fmtDate(cycle[0].date);
+      const to     = fmtDate(cycle[cycle.length - 1].date);
+
+      html += isOpen
+        ? `<div class="entry-col-headers"><span>Date</span><span>Comment</span><span>Meter</span><span>Usage</span><span></span></div>`
+        : `<div class="cycle-header"><div class="cycle-header-left">&#10003; Billing cycle &nbsp;·&nbsp; ${from} → ${to}</div><div class="cycle-header-right">Total: ${total} units</div></div>`;
+
+      [...cycle].reverse().forEach(entry => {
+        const isBill   = entry.type === 'bill';
+        const usageTxt = (entry.usage === 0 && entry === cycle[0]) ? '—' : (entry.usage >= 0 ? '+' + entry.usage : entry.usage) + ' u';
+        html += `
+          <div class="entry-row">
+            <span class="entry-date">${fmtDate(entry.date)}</span>
+            <span class="entry-comment ${entry.comment ? '' : 'empty'}">${entry.comment || 'No comment'}</span>
+            <span class="entry-meter">${entry.meterReading}</span>
+            <span class="entry-usage ${isBill ? 'bill-reset' : ''}">${usageTxt}</span>
+            <span class="entry-actions">
+              <span class="badge ${isBill ? 'badge-bill' : 'badge-entry'}">${isBill ? 'Bill' : 'Entry'}</span>
+              <button class="btn-del" onclick="deleteEntry(${entry.id})" title="Delete">&#10005;</button>
+            </span>
+          </div>`;
+      });
+    });
+    section.innerHTML = html;
+  }
+
+  /* ── Init ─────────────────────────────────────────────────────────── */
+  document.getElementById('entriesSection').innerHTML =
+    `<div class="empty-state"><div class="icon">&#9889;</div>Loading…</div>`;
+  fetchEntries()
+    .then(() => renderAll())
+    .catch(err => {
+      document.getElementById('entriesSection').innerHTML =
+        `<div class="empty-state" style="color:var(--red)">Failed to load: ${err.message}</div>`;
+    });
+</script>
+</body>
+</html>

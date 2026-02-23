@@ -72,6 +72,83 @@ app.use(express.json());
 // Serve the HTML files at the root (e.g. http://localhost:3000/login.html)
 app.use(express.static(path.join(__dirname, '..')));
 
+// ── JWT auth middleware ───────────────────────────────────────────────────────
+function requireAuth(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    req.user = jwt.verify(auth.slice(7), JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
+
+// ── GET /api/electricity ──────────────────────────────────────────────────────
+app.get('/api/electricity', requireAuth, async (req, res) => {
+  try {
+    const result = await db.send(new GetCommand({
+      TableName: TABLE_NAME,
+      Key: { email: req.user.email },
+    }));
+    return res.json({ entries: result.Item?.electricityEntries || [] });
+  } catch (err) {
+    console.error('Electricity GET error:', err);
+    return res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// ── POST /api/electricity ─────────────────────────────────────────────────────
+app.post('/api/electricity', requireAuth, async (req, res) => {
+  try {
+    const { id, date, meterReading, usage, comment, type } = req.body || {};
+    if (!date || meterReading === undefined || !type) {
+      return res.status(400).json({ error: 'date, meterReading and type are required.' });
+    }
+    const result = await db.send(new GetCommand({
+      TableName: TABLE_NAME,
+      Key: { email: req.user.email },
+    }));
+    if (!result.Item) return res.status(404).json({ error: 'User not found.' });
+
+    const entries = result.Item.electricityEntries || [];
+    entries.push({ id, date, meterReading, usage, comment: comment || '', type });
+
+    await db.send(new PutCommand({
+      TableName: TABLE_NAME,
+      Item: { ...result.Item, electricityEntries: entries },
+    }));
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Electricity POST error:', err);
+    return res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// ── DELETE /api/electricity/:id ───────────────────────────────────────────────
+app.delete('/api/electricity/:id', requireAuth, async (req, res) => {
+  try {
+    const entryId = parseInt(req.params.id);
+    const result  = await db.send(new GetCommand({
+      TableName: TABLE_NAME,
+      Key: { email: req.user.email },
+    }));
+    if (!result.Item) return res.status(404).json({ error: 'User not found.' });
+
+    const entries = (result.Item.electricityEntries || []).filter(e => e.id !== entryId);
+    await db.send(new PutCommand({
+      TableName: TABLE_NAME,
+      Item: { ...result.Item, electricityEntries: entries },
+    }));
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Electricity DELETE error:', err);
+    return res.status(500).json({ error: 'Server error.' });
+  }
+});
+
 // ── POST /api/auth/register ───────────────────────────────────────────────────
 app.post('/api/auth/register', async (req, res) => {
   try {

@@ -154,7 +154,7 @@ if [ -z "$API_ID" ]; then
   API_ID=$(aws apigatewayv2 create-api \
     --name "$API_NAME" \
     --protocol-type HTTP \
-    --cors-configuration 'AllowOrigins=["*"],AllowMethods=["POST"],AllowHeaders=["content-type"]' \
+    --cors-configuration 'AllowOrigins=["*"],AllowMethods=["GET","POST","DELETE","OPTIONS"],AllowHeaders=["content-type","authorization"]' \
     --region "$REGION" \
     --query 'ApiId' --output text)
 
@@ -167,15 +167,10 @@ if [ -z "$API_ID" ]; then
     --region "$REGION" \
     --query 'IntegrationId' --output text)
 
-  echo "     Creating routes..."
+  echo "     Creating catch-all route..."
   aws apigatewayv2 create-route \
     --api-id "$API_ID" \
-    --route-key "POST /api/auth/register" \
-    --target "integrations/$INTEG_ID" \
-    --region "$REGION" --output text > /dev/null
-  aws apigatewayv2 create-route \
-    --api-id "$API_ID" \
-    --route-key "POST /api/auth/login" \
+    --route-key "\$default" \
     --target "integrations/$INTEG_ID" \
     --region "$REGION" --output text > /dev/null
 
@@ -195,7 +190,36 @@ if [ -z "$API_ID" ]; then
     --source-arn "arn:aws:execute-api:${REGION}:${ACCOUNT_ID}:${API_ID}/*" \
     --region "$REGION" --output text > /dev/null
 else
-  echo "     API already exists (ID: $API_ID) — skipping creation."
+  echo "     API already exists (ID: $API_ID) — updating CORS and adding catch-all route..."
+
+  # Update CORS to allow GET, POST, DELETE and the Authorization header
+  aws apigatewayv2 update-api \
+    --api-id "$API_ID" \
+    --cors-configuration 'AllowOrigins=["*"],AllowMethods=["GET","POST","DELETE","OPTIONS"],AllowHeaders=["content-type","authorization"]' \
+    --region "$REGION" --output text > /dev/null
+
+  # Get the existing integration ID
+  INTEG_ID=$(aws apigatewayv2 get-integrations \
+    --api-id "$API_ID" \
+    --region "$REGION" \
+    --query 'Items[0].IntegrationId' --output text)
+
+  # Add catch-all $default route if it doesn't exist
+  EXISTING_DEFAULT=$(aws apigatewayv2 get-routes \
+    --api-id "$API_ID" \
+    --region "$REGION" \
+    --query "Items[?RouteKey=='\$default'].RouteId" --output text)
+
+  if [ -z "$EXISTING_DEFAULT" ]; then
+    aws apigatewayv2 create-route \
+      --api-id "$API_ID" \
+      --route-key "\$default" \
+      --target "integrations/$INTEG_ID" \
+      --region "$REGION" --output text > /dev/null
+    echo "     Catch-all route added."
+  else
+    echo "     Catch-all route already exists."
+  fi
 fi
 
 API_URL="https://${API_ID}.execute-api.${REGION}.amazonaws.com"
@@ -221,6 +245,9 @@ echo "  API Gateway URL : $API_URL"
 echo "  S3 login page   : http://${S3_BUCKET:-sajeedmoh-my-projects}.s3-website.${REGION}.amazonaws.com/login.html"
 echo ""
 echo "  Endpoints:"
-echo "    POST $API_URL/api/auth/register"
-echo "    POST $API_URL/api/auth/login"
+echo "    POST   $API_URL/api/auth/register"
+echo "    POST   $API_URL/api/auth/login"
+echo "    GET    $API_URL/api/electricity"
+echo "    POST   $API_URL/api/electricity"
+echo "    DELETE $API_URL/api/electricity/:id"
 echo ""
