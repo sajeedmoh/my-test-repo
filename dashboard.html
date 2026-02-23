@@ -377,9 +377,9 @@
        RESPONSIVE — mobile sidebar overlay
     ══════════════════════════════════════ */
     @media (max-width: 680px) {
-      :root { --sidebar-w: 0px; }
-
+      /* Sidebar stays 260px wide but slides off-screen by default */
       .sidebar {
+        width: 260px;
         transform: translateX(-260px);
         transition: transform 0.25s ease;
       }
@@ -388,6 +388,7 @@
 
       .hamburger { display: flex; align-items: center; }
 
+      /* Main takes full width — no sidebar offset */
       .main { margin-left: 0; }
 
       .content { padding: 28px 20px 60px; }
