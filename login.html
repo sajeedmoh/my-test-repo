@@ -264,6 +264,12 @@
     const togglePw  = document.getElementById('togglePw');
     const alertEl   = document.getElementById('alert');
 
+    // Show timeout message if redirected by session-guard
+    if (new URLSearchParams(window.location.search).get('reason') === 'timeout') {
+      alertEl.className   = 'alert error';
+      alertEl.textContent = 'You were logged out due to inactivity. Please sign in again.';
+    }
+
     // Toggle password visibility
     togglePw.onclick = () => {
       const show = pwEl.type === 'password';
