@@ -86,48 +86,4 @@ API Gateway (1dcu9kqzz9 · ap-south-1)
 Lambda (my-test-repo-auth · ap-south-1)
 ```
 
-### Key Resources
 
-| Resource | Details |
-|----------|---------|
-| **Domain** | `sajeed.online` |
-| **S3 Bucket** | `sajeed.online` — ap-south-1 |
-| **CloudFront** | Distribution ID: `E3K41WVH8F6W8U` |
-| **ACM Certificate** | `us-east-1` (required for CloudFront) |
-| **Route 53 Hosted Zone** | `Z0203875PFJKDJ52QM2T` |
-| **API Gateway** | `https://1dcu9kqzz9.execute-api.ap-south-1.amazonaws.com` |
-| **Contact Lambda** | `sajeed-contact-form` — ap-south-1 |
-| **SES Sender** | `noreply@sajeed.online` |
-| **AWS Account** | `639408967992` |
-| **IAM User** | `sajeedrepo` |
-
----
-
-## Deployment
-
-Every change must be deployed to **both** GitHub and S3:
-
-```bash
-# 1. Push to GitHub
-git add <files>
-git commit -m "your message"
-git push origin main
-
-# 2. Sync to S3
-aws s3 cp <file> s3://sajeed.online/<file>
-# or for multiple files:
-aws s3 sync . s3://sajeed.online/ --exclude ".git/*"
-
-# 3. Invalidate CloudFront cache
-aws cloudfront create-invalidation \
-  --distribution-id E3K41WVH8F6W8U \
-  --paths "/*"
-```
-
----
-
-## AWS Budget
-
-Monthly budget set to **$5.00 USD** with email alerts at every 5% from 55% to 100%, sent to `sajeedmoh@gmail.com`.
-
-Expected monthly cost: ~$0.50–$1.50 for current traffic levels.
