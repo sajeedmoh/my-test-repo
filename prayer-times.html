@@ -346,88 +346,6 @@
     }
     .iqama-time.loading { color: var(--sub); font-size: 0.9rem; font-weight: 400; }
 
-    /* ── Ramzan fasting banner ──────────────────────── */
-    .ramzan-banner {
-      width: 100%;
-      max-width: 680px;
-      background: linear-gradient(135deg, rgba(201,168,76,0.22) 0%, rgba(45,106,79,0.55) 100%);
-      border: 1.5px solid var(--gold);
-      border-radius: 16px;
-      padding: 18px 28px;
-      display: none;                  /* shown only in Ramadan */
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 0 30px rgba(201,168,76,0.20);
-      animation: ramzanPulse 3s ease-in-out infinite alternate;
-    }
-    @keyframes ramzanPulse {
-      from { box-shadow: 0 0 18px rgba(201,168,76,0.18); }
-      to   { box-shadow: 0 0 38px rgba(201,168,76,0.42); }
-    }
-    .ramzan-left { display: flex; align-items: center; gap: 16px; }
-    .ramzan-crescent { font-size: 2.6rem; line-height: 1; filter: drop-shadow(0 0 8px rgba(201,168,76,0.7)); }
-    .ramzan-text-wrap { display: flex; flex-direction: column; gap: 2px; }
-    .ramzan-label {
-      font-size: 0.72rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--sub);
-    }
-    .ramzan-title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      color: var(--cream);
-    }
-    .ramzan-arabic {
-      font-size: 1rem;
-      color: var(--gold);
-      margin-top: 1px;
-    }
-    .ramzan-day-wrap { text-align: center; }
-    .ramzan-day-num {
-      font-size: 3.8rem;
-      font-weight: 900;
-      line-height: 1;
-      color: var(--gold);
-      text-shadow: 0 0 18px rgba(201,168,76,0.6);
-      font-variant-numeric: tabular-nums;
-    }
-    .ramzan-day-label {
-      font-size: 0.72rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--sub);
-      margin-top: 2px;
-    }
-    .ramzan-progress-wrap {
-      width: 100%;
-      margin-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .ramzan-progress-bar {
-      width: 100%;
-      height: 6px;
-      background: rgba(255,255,255,0.12);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .ramzan-progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #8b6914, #f5d98b);
-      border-radius: 99px;
-      transition: width 0.6s ease;
-    }
-    .ramzan-progress-text {
-      font-size: 0.72rem;
-      color: var(--sub);
-      text-align: right;
-    }
-
     /* ── Status / error ─────────────────────────────── */
     .status-msg {
       font-size: 0.85rem;
@@ -564,31 +482,6 @@
     <span>&#127759; <span id="locationLabel">Location not set</span></span>
   </div>
 
-  <!-- Ramzan Fasting Day Banner -->
-  <div class="ramzan-banner" id="ramzanBanner">
-    <div style="width:100%;">
-      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-        <div class="ramzan-left">
-          <div class="ramzan-crescent">&#9790;</div>
-          <div class="ramzan-text-wrap">
-            <div class="ramzan-label">Ramzan Fasting</div>
-            <div class="ramzan-title">Ramadan Mubarak &#x1F917;</div>
-            <div class="ramzan-arabic">&#x0631;&#x0645;&#x0636;&#x0627;&#x0646; &#x0645;&#x0628;&#x0627;&#x0631;&#x0643;</div>
-          </div>
-        </div>
-        <div class="ramzan-day-wrap">
-          <div class="ramzan-day-num" id="ramzanDayNum">—</div>
-          <div class="ramzan-day-label">Day of Fasting</div>
-        </div>
-      </div>
-      <div class="ramzan-progress-wrap">
-        <div class="ramzan-progress-bar">
-          <div class="ramzan-progress-fill" id="ramzanProgress" style="width:0%"></div>
-        </div>
-        <div class="ramzan-progress-text" id="ramzanProgressText"></div>
-      </div>
-    </div>
-  </div>
 
   <!-- Controls -->
   <div class="controls-card">
@@ -596,7 +489,7 @@
     <div class="row">
       <div class="field">
         <label for="cityInput">City</label>
-        <input type="text" id="cityInput" placeholder="e.g. London" value="Vadakara" />
+        <input type="text" id="cityInput" placeholder="e.g. London" />
       </div>
       <div class="field">
         <label for="countryInput">Country</label>
@@ -914,7 +807,6 @@ async function fetchPrayerTimes() {
     document.getElementById('hijriDate').textContent =
       `${date.hijri.day} ${date.hijri.month.en} ${date.hijri.year} AH`;
     document.getElementById('locationLabel').textContent = `${city}, ${country}`;
-    updateRamzanBanner();
 
     setStatus('');
   } catch (err) {
@@ -961,8 +853,7 @@ function useGeolocation() {
         document.getElementById('gregorianDate').textContent = data.date.readable;
         document.getElementById('hijriDate').textContent =
           `${data.date.hijri.day} ${data.date.hijri.month.en} ${data.date.hijri.year} AH`;
-        updateRamzanBanner();
-        setStatus('');
+            setStatus('');
       } catch (err) {
         setStatus(`Error: ${err.message}`, true);
       }
@@ -973,41 +864,6 @@ function useGeolocation() {
   );
 }
 
-/* ── Kerala local moon sighting calendar ────────────
-   Ramadan 1447 AH in Kerala: first fast = Feb 19, 2026
-   Update KERALA_RAMADAN_START each year after local sighting.
-─────────────────────────────────────────────────── */
-const KERALA_RAMADAN_START = new Date(2026, 1, 19); // Feb 19 2026 = Day 1
-const RAMADAN_HIJRI_YEAR   = 1447;
-
-function updateRamzanBanner() {
-  const banner    = document.getElementById('ramzanBanner');
-  const dayNumEl  = document.getElementById('ramzanDayNum');
-  const progFill  = document.getElementById('ramzanProgress');
-  const progText  = document.getElementById('ramzanProgressText');
-
-  // Midnight-normalised today
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const start = new Date(KERALA_RAMADAN_START);
-  start.setHours(0, 0, 0, 0);
-
-  const fastingDay = Math.floor((today - start) / 86400000) + 1;
-
-  if (fastingDay >= 1 && fastingDay <= 30) {
-    dayNumEl.textContent = fastingDay;
-    const pct = Math.round((fastingDay / 30) * 100);
-    progFill.style.width = `${pct}%`;
-    progText.textContent = `${fastingDay} of 30 days complete · ${30 - fastingDay} days remaining`;
-    banner.style.display = 'flex';
-
-    // Override the info-bar Hijri date to match Kerala local sighting
-    document.getElementById('hijriDate').textContent =
-      `${fastingDay} Ramaḍān ${RAMADAN_HIJRI_YEAR} AH`;
-  } else {
-    banner.style.display = 'none';
-  }
-}
 
 /* ── Auto-load on page open if city pre-filled ───── */
 window.addEventListener('DOMContentLoaded', () => {
