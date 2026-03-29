@@ -114,52 +114,6 @@ Log out and back in — the new JWT will carry `role: admin` and the Admin tile 
 
 ---
 
-## Architecture
-
-```
-User
- │
- ▼
-Route 53 (sajeed.online)  ←  Alias records
- │
- ▼
-CloudFront (E3K41WVH8F6W8U)
- │  HTTPS · HTTP → HTTPS redirect
- │  ACM SSL certificate (us-east-1)
- ▼
-S3 Bucket (sajeed.online · ap-south-1)
- │  Static website · index: index.html
- ├── index.html, login.html, dashboard.html …
- └── assets/profile.jpeg
-
-Contact Form
- │
- ▼
-API Gateway (ap-south-1)  POST /contact
- ▼
-Lambda  sajeed-contact-form  (Python 3.12)
- ▼
-SES (ap-south-1)
- │  From: noreply@sajeed.online (DKIM verified)
- └─→ sajeedmoh@gmail.com
-
-Auth & Data API
- │
- ▼
-API Gateway (ap-south-1)
- │  /api/auth/*  /api/electricity  /api/admin/*
- ▼
-Lambda  my-test-repo-auth  (nodejs20.x · Express)
- ▼
-DynamoDB  auth_users  (ap-south-1)
- └─ PK: email
-    Fields: firstName, lastName, passwordHash,
-            role, status, lastLoginAt, createdAt,
-            electricityEntries[]
-```
-
----
-
 ## API Endpoints
 
 **Base URL:** `https://1dcu9kqzz9.execute-api.ap-south-1.amazonaws.com`
