@@ -326,7 +326,7 @@
       </div>
       <div class="convert-result" id="goldResult"></div>
     </div>
-    <div class="note">* International spot price (XAU) converted to INR. Local jeweller prices may vary.</div>
+    <div class="note">* Spot price + import duty (7.6%) + 3% GST. Excludes making charges. Actual jeweller price may vary slightly.</div>
   </div>
 
   <!-- Silver -->
@@ -351,7 +351,7 @@
       </div>
       <div class="convert-result" id="silverResult"></div>
     </div>
-    <div class="note">* International spot price (XAG) converted to INR. Local prices may vary.</div>
+    <div class="note">* Spot price + 15% import duty + 3% GST. Actual market price may vary slightly.</div>
   </div>
 
 </div>
@@ -359,6 +359,10 @@
 <script>
   const TROY_OZ_TO_GRAM = 31.1035;
   const PAVAN_GRAMS     = 8;
+  const GOLD_DUTY       = 1.076;       // 6% BCD + 1% AIDC + 0.6% SWS (India import duty)
+  const GOLD_GST        = 1.03;        // 3% GST on gold
+  const SILVER_DUTY     = 1.15;        // 15% import duty on silver
+  const SILVER_GST      = 1.03;        // 3% GST on silver
 
   const API_PRIMARY  = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies';
   const API_FALLBACK = 'https://latest.currency-api.pages.dev/v1/currencies';
@@ -432,7 +436,7 @@
     document.getElementById('aedUnit').textContent = `1 AED = ₹${fmt(rates.aed)}`;
 
     if (goldUSDPerOz != null) {
-      const goldPerGram     = (goldUSDPerOz / TROY_OZ_TO_GRAM) * rates.usd * (22 / 24);
+      const goldPerGram     = (goldUSDPerOz / TROY_OZ_TO_GRAM) * rates.usd * (22 / 24) * GOLD_DUTY * GOLD_GST;
       const pavanRate       = goldPerGram * PAVAN_GRAMS;
       rates.goldPerGram     = goldPerGram;
       setEl('goldGramRate',  `₹${fmt(goldPerGram)}`);
@@ -443,7 +447,7 @@
     }
 
     if (silverUSDPerOz != null) {
-      const silverPerGram = (silverUSDPerOz / TROY_OZ_TO_GRAM) * rates.usd;
+      const silverPerGram = (silverUSDPerOz / TROY_OZ_TO_GRAM) * rates.usd * SILVER_DUTY * SILVER_GST;
       rates.silverPerGram = silverPerGram;
       setEl('silverGramRate', `₹${fmt(silverPerGram)}`);
     } else {
