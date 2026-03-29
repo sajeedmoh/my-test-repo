@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
+  <title>Login – Muhammed Sajeed Portal</title>
   <script src="config.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -18,13 +18,103 @@
       padding: 24px 16px;
     }
 
+    .wrapper {
+      display: flex;
+      width: 100%;
+      max-width: 920px;
+      min-height: 560px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+    }
+
+    /* LEFT PANEL */
+    .info-panel {
+      flex: 1;
+      background: linear-gradient(145deg, #0a192f 0%, #112240 100%);
+      padding: 48px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      color: #ccd6f6;
+    }
+    .info-panel .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #64ffda;
+      text-decoration: none;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+    .info-panel .back-link:hover { opacity: 1; }
+    .info-panel h2 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #e6f1ff;
+      margin-bottom: 0.5rem;
+    }
+    .info-panel .subtitle {
+      color: #8892b0;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.75rem 1rem;
+      background: rgba(100, 255, 218, 0.05);
+      border: 1px solid rgba(100, 255, 218, 0.1);
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .feature-item:hover { background: rgba(100, 255, 218, 0.08); }
+    .feature-icon {
+      font-size: 1.2rem;
+      width: 36px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .feature-info strong {
+      display: block;
+      font-size: 0.88rem;
+      color: #e6f1ff;
+      font-weight: 600;
+    }
+    .feature-info span {
+      font-size: 0.78rem;
+      color: #8892b0;
+    }
+    .info-note {
+      margin-top: 1.5rem;
+      padding: 0.75rem 1rem;
+      background: rgba(100, 255, 218, 0.06);
+      border-left: 3px solid #64ffda;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      color: #8892b0;
+    }
+
+    /* RIGHT PANEL — login card */
     .card {
       background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
       width: 100%;
       max-width: 420px;
-      padding: 36px 32px;
+      padding: 48px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .logo {
@@ -51,6 +141,13 @@
       font-size: 0.88rem;
       color: #888;
       margin-top: 4px;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 700px) {
+      .wrapper { flex-direction: column; border-radius: 12px; }
+      .info-panel { padding: 28px 24px; }
+      .card { max-width: 100%; padding: 28px 24px; }
     }
 
     .form-group {
@@ -191,12 +288,8 @@
     /* ── Responsive ────────────────────────────── */
     @media (max-width: 480px) {
       .card { padding: 24px 20px; }
-
-      /* Minimum 16px font on inputs prevents iOS auto-zoom */
       input[type="email"],
       input[type="password"] { font-size: 1rem; }
-
-      /* Larger touch target for password toggle */
       .toggle-pw {
         right: 8px;
         width: 44px;
@@ -206,14 +299,67 @@
         justify-content: center;
         font-size: 1.1rem;
       }
-
-      /* More tappable forgot-password link */
       .forgot { font-size: 0.9rem; padding: 4px 0; display: inline-block; }
     }
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="wrapper">
+
+    <!-- LEFT: INFO PANEL -->
+    <div class="info-panel">
+      <a href="index.html" class="back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Profile
+      </a>
+      <h2>Personal Portal</h2>
+      <p class="subtitle">A private workspace for managing personal tools, trackers, and utilities — accessible only to authorised users.</p>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon">&#128202;</div>
+          <div class="feature-info">
+            <strong>Dashboard</strong>
+            <span>Overview of all your tools and activity</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">&#9889;</div>
+          <div class="feature-info">
+            <strong>Electricity Tracker</strong>
+            <span>Monitor and track KSEB electricity usage</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">&#128336;</div>
+          <div class="feature-info">
+            <strong>Prayer Times</strong>
+            <span>Daily prayer schedule and notifications</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">&#9989;</div>
+          <div class="feature-info">
+            <strong>To-Do List</strong>
+            <span>Manage tasks and personal to-dos</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">&#128290;</div>
+          <div class="feature-info">
+            <strong>Calculator &amp; Utilities</strong>
+            <span>Quick tools for everyday calculations</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-note">
+        &#128274; Access is restricted. Contact <strong>sajeedmoh@gmail.com</strong> to request an account.
+      </div>
+    </div>
+
+    <!-- RIGHT: LOGIN FORM -->
+    <div class="card">
     <div class="logo">
       <div class="brand">Muhammed Sajeed Projects</div>
       <h1>Welcome back</h1>
@@ -250,7 +396,8 @@
     <p class="footer-text">
       Don't have an account? <a href="register.html">Create one</a>
     </p>
-  </div>
+  </div><!-- end .card -->
+  </div><!-- end .wrapper -->
 
   <script>
     // Redirect if already logged in
