@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KSEB Bill Calculator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --surface:  #1a1d27;
+      --border:   rgba(255,255,255,0.08);
+      --text:     #f0f0f0;
+      --muted:    rgba(240,240,240,0.45);
+      --accent:   #f59e0b;
+      --accent-bg: rgba(245,158,11,0.1);
+      --accent-border: rgba(245,158,11,0.25);
+      --green:    #22c55e;
+      --red:      #ef4444;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 76px 24px 60px;
+    }
+
+    /* ── Back bar ─────────────────────────────── */
+    .back-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(15,17,23,0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      height: 44px;
+    }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.18s;
+    }
+
+    .back-link:hover { color: var(--accent); }
+
+    /* ── Page header ─────────────────────────── */
+    .page-header {
+      max-width: 560px;
+      margin: 0 auto 28px;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* ── Card ─────────────────────────────────── */
+    .card {
+      max-width: 560px;
+      margin: 0 auto 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    /* ── Consumer type tabs ───────────────────── */
+    .tab-group {
+      display: flex;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 22px;
+      gap: 3px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      text-align: center;
+    }
+
+    .tab.active {
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-border);
+      color: var(--accent);
+    }
+
+    /* ── Form fields ──────────────────────────── */
+    .field { margin-bottom: 18px; }
+
+    .field label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 7px;
+      font-weight: 500;
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .field input[type="number"] {
+      width: 100%;
+      padding: 11px 60px 11px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+
+    .field input[type="number"]::-webkit-outer-spin-button,
+    .field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .field input[type="number"]:focus { border-color: var(--accent); }
+
+    .input-unit {
+      position: absolute;
+      right: 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    /* ── Billing period toggle ────────────────── */
+    .period-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .period-toggle label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.1);
+      border-radius: 99px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle-track::before {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 3px; top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle-switch input:checked + .toggle-track { background: var(--accent); }
+    .toggle-switch input:checked + .toggle-track::before { transform: translateX(18px); }
+
+    .period-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      min-width: 80px;
+    }
+
+    /* ── Calculate button ─────────────────────── */
+    .btn-calc {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      color: #000;
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: filter 0.15s, transform 0.1s;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-calc:hover { filter: brightness(1.1); }
+    .btn-calc:active { transform: scale(0.98); }
+
+    /* ── Results card ─────────────────────────── */
+    #resultsCard { display: none; }
+    #resultsCard.show { display: block; }
+
+    /* ── Slab breakdown table ─────────────────── */
+    .slab-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      margin-bottom: 16px;
+    }
+
+    .slab-table th {
+      text-align: left;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 0 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .slab-table th:last-child,
+    .slab-table td:last-child { text-align: right; }
+
+    .slab-table td {
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    .slab-table tr:last-child td { border-bottom: none; }
+
+    .slab-units {
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+    }
+
+    .slab-rate { color: var(--muted); }
+
+    .slab-bar-wrap {
+      width: 80px;
+      height: 4px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .slab-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    .slab-amount {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Charges summary ──────────────────────── */
+    .charges-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 4px;
+    }
+
+    .charge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.85rem;
+    }
+
+    .charge-row:last-child { border-bottom: none; }
+
+    .charge-label { color: var(--muted); }
+
+    .charge-value {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Total ────────────────────────────────── */
+    .total-box {
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .total-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .total-amount {
+      font-size: 1.9rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      color: var(--accent);
+    }
+
+    /* ── Note ─────────────────────────────────── */
+    .note-card {
+      max-width: 560px;
+      margin: 0 auto;
+      font-size: 0.72rem;
+      color: rgba(240,240,240,0.28);
+      line-height: 1.6;
+      padding: 0 4px;
+    }
+
+    /* ── Responsive ───────────────────────────── */
+    @media (max-width: 600px) {
+      body { padding: 68px 16px 48px; }
+      .slab-bar-wrap { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="back-bar">
+  <a href="dashboard.html" class="back-link">&#8592; Back to Dashboard</a>
+</nav>
+
+<div class="page-header">
+  <h1 class="page-title">&#9889; KSEB Bill Calculator</h1>
+  <div class="page-subtitle">Kerala State Electricity Board · Domestic tariff estimator</div>
+</div>
+
+<!-- ── Input form ─────────────────────────────── -->
+<div class="card">
+  <div class="card-title">Consumer Details</div>
+
+  <!-- Consumer type -->
+  <div class="tab-group">
+    <button class="tab active" onclick="setCategory('domestic', this)">LT-1A · Domestic</button>
+    <button class="tab" onclick="setCategory('bpl', this)">LT-1 · BPL / Below 50 units</button>
+  </div>
+
+  <!-- Billing period toggle -->
+  <div class="period-toggle">
+    <label>Billing period:</label>
+    <label class="toggle-switch">
+      <input type="checkbox" id="bimonthlyToggle" checked onchange="updatePeriodLabel()" />
+      <span class="toggle-track"></span>
+    </label>
+    <span class="period-label" id="periodLabel">Bi-monthly</span>
+  </div>
+
+  <!-- Units input -->
+  <div class="field">
+    <label id="unitsLabel">Units consumed (bi-monthly)</label>
+    <div class="input-wrap">
+      <input type="number" id="unitsInput" placeholder="e.g. 180" min="0" max="9999" />
+      <span class="input-unit">kWh</span>
+    </div>
+  </div>
+
+  <!-- FAC input -->
+  <div class="field">
+    <label>Fuel Adjustment Charge (FAC) <span style="color:rgba(240,240,240,0.3);font-weight:400">— per unit, check latest KSEB order</span></label>
+    <div class="input-wrap">
+      <input type="number" id="facInput" value="0.10" min="0" max="5" step="0.01" />
+      <span class="input-unit">₹/unit</span>
+    </div>
+  </div>
+
+  <button class="btn-calc" onclick="calculate()">Calculate Bill</button>
+</div>
+
+<!-- ── Results ───────────────────────────────── -->
+<div class="card" id="resultsCard">
+
+  <!-- Slab breakdown -->
+  <div class="card-title">Energy Charge Breakdown</div>
+  <table class="slab-table" id="slabTable">
+    <thead>
+      <tr>
+        <th>Slab</th>
+        <th>Units</th>
+        <th>Rate</th>
+        <th style="display:none" class="bar-col"></th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+    <tbody id="slabBody"></tbody>
+  </table>
+
+  <!-- Charges summary -->
+  <div class="card-title" style="margin-top:8px">Bill Summary</div>
+  <div class="charges-list">
+    <div class="charge-row">
+      <span class="charge-label">Energy charges</span>
+      <span class="charge-value" id="sumEnergy">—</span>
+    </div>
+    <div class="charge-row">
+      <span class="charge-label">Fixed charge</span>
+      <span class="charge-value" id="sumFixed">—</span>
+    </div>
+    <div class="charge-row">
+      <span class="charge-label">Fuel Adjustment Charge (FAC)</span>
+      <span class="charge-value" id="sumFAC">—</span>
+    </div>
+    <div class="charge-row">
+      <span class="charge-label">Electricity Duty (10%)</span>
+      <span class="charge-value" id="sumED">—</span>
+    </div>
+    <div class="charge-row">
+      <span class="charge-label">Meter rental</span>
+      <span class="charge-value" id="sumMeter">—</span>
+    </div>
+  </div>
+
+  <!-- Total -->
+  <div class="total-box" style="margin-top:16px">
+    <span class="total-label">Estimated Total</span>
+    <span class="total-amount" id="grandTotal">₹0</span>
+  </div>
+
+</div>
+
+<!-- Note -->
+<div class="note-card">
+  * Based on KSEB LT-1A domestic tariff slabs. FAC and tariff rates are subject to revision by KSEB / KERC.
+  Always verify with your latest KSEB bill or <a href="https://kseb.in" target="_blank" style="color:rgba(245,158,11,0.6);text-decoration:none">kseb.in</a>.
+  This calculator does not account for arrears, rebates, or special consumer categories.
+</div>
+
+<script>
+  /* ── Tariff data ──────────────────────────────────────────────────
+     Source: KSEB LT-1A (Domestic) tariff — bi-monthly billing
+     Each slab: { max: upper limit (Infinity for last), rate: ₹/unit }
+     Fixed charge is determined by total units consumed.
+  ─────────────────────────────────────────────────────────────────── */
+  const TARIFF = {
+    domestic: {
+      slabs: [
+        { max: 50,       rate: 3.15, label: '0 – 50'   },
+        { max: 100,      rate: 3.90, label: '51 – 100' },
+        { max: 150,      rate: 5.10, label: '101 – 150'},
+        { max: 200,      rate: 6.50, label: '151 – 200'},
+        { max: 250,      rate: 7.10, label: '201 – 250'},
+        { max: 300,      rate: 7.75, label: '251 – 300'},
+        { max: 350,      rate: 8.00, label: '301 – 350'},
+        { max: 500,      rate: 8.30, label: '351 – 500'},
+        { max: Infinity, rate: 8.80, label: '501+'     },
+      ],
+      fixedCharge: [
+        { max: 50,       charge: 50  },
+        { max: 100,      charge: 75  },
+        { max: 150,      charge: 95  },
+        { max: 200,      charge: 110 },
+        { max: 250,      charge: 130 },
+        { max: 300,      charge: 155 },
+        { max: 350,      charge: 175 },
+        { max: 500,      charge: 195 },
+        { max: Infinity, charge: 220 },
+      ],
+      meterRental: 20,   // bi-monthly
+      edRate: 0.10,      // Electricity Duty 10%
+    },
+    bpl: {
+      slabs: [
+        { max: 50,       rate: 1.50, label: '0 – 50' },
+      ],
+      fixedCharge: [
+        { max: Infinity, charge: 20 },
+      ],
+      meterRental: 10,
+      edRate: 0.00,  // BPL consumers exempt from ED
+    },
+  };
+
+  let currentCategory = 'domestic';
+
+  function setCategory(cat, btn) {
+    currentCategory = cat;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('resultsCard').classList.remove('show');
+  }
+
+  function updatePeriodLabel() {
+    const bim = document.getElementById('bimonthlyToggle').checked;
+    document.getElementById('periodLabel').textContent = bim ? 'Bi-monthly' : 'Monthly';
+    document.getElementById('unitsLabel').textContent =
+      `Units consumed (${bim ? 'bi-monthly' : 'monthly'})`;
+  }
+
+  function fmt(n) {
+    return '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function calculate() {
+    const isBimonthly = document.getElementById('bimonthlyToggle').checked;
+    let rawUnits = parseFloat(document.getElementById('unitsInput').value);
+    const fac    = parseFloat(document.getElementById('facInput').value) || 0;
+
+    if (isNaN(rawUnits) || rawUnits < 0) {
+      document.getElementById('unitsInput').focus();
+      return;
+    }
+
+    // If monthly input, double it for bi-monthly tariff slabs
+    const units = isBimonthly ? rawUnits : rawUnits * 2;
+
+    const tariff = TARIFF[currentCategory];
+
+    // ── Slab calculation ───────────────────────
+    let remaining = units;
+    let energyTotal = 0;
+    const slabRows = [];
+
+    for (const slab of tariff.slabs) {
+      if (remaining <= 0) break;
+      const prev = slab === tariff.slabs[0] ? 0 : tariff.slabs[tariff.slabs.indexOf(slab) - 1].max;
+      const capacity = slab.max === Infinity ? remaining : Math.min(slab.max - prev, remaining);
+      const unitsInSlab = Math.min(remaining, capacity);
+      const amount = unitsInSlab * slab.rate;
+      energyTotal += amount;
+      slabRows.push({ label: slab.label, units: unitsInSlab, rate: slab.rate, amount });
+      remaining -= unitsInSlab;
+    }
+
+    // ── Fixed charge ───────────────────────────
+    let fixedCharge = 0;
+    for (const fc of tariff.fixedCharge) {
+      if (units <= fc.max) { fixedCharge = fc.charge; break; }
+    }
+
+    // ── FAC ───────────────────────────────────
+    const facTotal = units * fac;
+
+    // ── Electricity Duty ───────────────────────
+    const edBase = energyTotal + fixedCharge;
+    const ed = edBase * tariff.edRate;
+
+    // ── Meter rental ───────────────────────────
+    const meter = tariff.meterRental;
+
+    // ── Grand total ────────────────────────────
+    const total = energyTotal + fixedCharge + facTotal + ed + meter;
+
+    // ── Render slab table ──────────────────────
+    const maxAmount = Math.max(...slabRows.map(r => r.amount), 1);
+    const tbody = document.getElementById('slabBody');
+    tbody.innerHTML = slabRows.map(row => `
+      <tr>
+        <td>${row.label} <span class="slab-rate" style="font-size:0.7rem">(₹${row.rate.toFixed(2)}/unit)</span></td>
+        <td class="slab-units">${row.units.toFixed(1)}</td>
+        <td>
+          <div class="slab-bar-wrap">
+            <div class="slab-bar" style="width:${(row.amount / maxAmount * 100).toFixed(1)}%"></div>
+          </div>
+        </td>
+        <td class="slab-amount">${fmt(row.amount)}</td>
+      </tr>
+    `).join('');
+
+    // ── Render summary ─────────────────────────
+    document.getElementById('sumEnergy').textContent = fmt(energyTotal);
+    document.getElementById('sumFixed').textContent  = fmt(fixedCharge);
+    document.getElementById('sumFAC').textContent    = fmt(facTotal);
+    document.getElementById('sumED').textContent     = tariff.edRate > 0 ? fmt(ed) : '—';
+    document.getElementById('sumMeter').textContent  = fmt(meter);
+    document.getElementById('grandTotal').textContent = fmt(total);
+
+    document.getElementById('resultsCard').classList.add('show');
+    document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // Allow Enter key to calculate
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.activeElement.tagName === 'INPUT') calculate();
+  });
+</script>
+</body>
+</html>
